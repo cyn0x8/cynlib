@@ -1,0 +1,14 @@
+{
+	"title": "cynlib",
+	"description": "various tools and utils for friday night funkin modding",
+	"homepage": "https://github.com/cyn0x8/cynlib",
+	
+	"contributors": [
+		{"name": "cyn0x8", "role": "coder"}
+	],
+	
+	"license": "MIT",
+	
+	"api_version": "0.5.0",
+	"mod_version": "1.0.0"
+}
