@@ -1,0 +1,287 @@
+import flixel.FlxBasic;
+import flixel.util.FlxTimer;
+
+import funkin.PlayerSettings;
+import funkin.input.Controls;
+import funkin.modding.module.ScriptedModule;
+
+typedef Menu = {
+	data:Null<Dynamic>,
+	
+	container:Null<FlxBasic>,
+	
+	enabled:Bool,
+	frozen:Bool,
+	
+	selection:Int,
+	items:Array<Dynamic>,
+	
+	size_x:Int,
+	size_y:Int,
+	
+	wrap_x:Bool,
+	wrap_y:Bool,
+	
+	on_enter:Null<()->Void>,
+	on_exit:Null<()->Void>,
+	on_back:Null<()->Void>,
+	
+	on_update:Null<(Float)->Void>,
+	
+	push_items:(Array<Dynamic>)->Void,
+	
+	debounce:(Float)->Void,
+	debounce_timer:Null<FlxTimer>,
+	
+	update:(Float)->Void,
+	
+	exists:Bool,
+	destroy:()->Void
+}
+
+typedef MenuData = {
+	data:Null<Dynamic>,
+	
+	container:Null<FlxBasic>,
+	
+	size_x:Null<Int>,
+	size_y:Null<Int>,
+	
+	wrap_x:Null<Bool>,
+	wrap_y:Null<Bool>,
+	
+	on_enter:Null<()->Void>,
+	on_exit:Null<()->Void>,
+	on_back:Null<()->Void>,
+	
+	on_update:Null<(Float)->Void>
+}
+
+class CL_Menu extends Module {
+	public function new() {
+		super("CL_Menu", -2147483648);
+	}
+	
+	public function new_menu(data:MenuData):Menu {
+		if (data == null) {
+			data = {};
+		}
+		
+		var obj:Dynamic = {
+			data: data.data == null ? {} : data.data,
+			
+			container: data.container,
+			
+			enabled: false,
+			frozen: false,
+			
+			selection: 0,
+			items: new Array(),
+			
+			wrap_x: data.wrap_x == null ? true : data.wrap_x,
+			wrap_y: data.wrap_y == null ? true : data.wrap_y,
+			
+			on_enter: data.on_enter == null ? function():Void {} : data.on_enter,
+			on_exit: data.on_exit == null ? function():Void {} : data.on_exit,
+			on_back: data.on_back == null ? function():Void {} : data.on_back,
+			
+			on_update: data.on_update == null ? function(elapsed:Float):Void {} : data.on_update,
+			
+			enabled: false
+		};
+		
+		obj.size_x = Std.int(data.size_x == null ? 1 : Math.max(1, data.size_x));
+		obj.size_y = Std.int(data.size_y == null ? Math.max(1, obj.items.length) / obj.size_x : Math.max(1, data.size_y));
+		
+		obj.push_items = function(items:Array<Dynamic>, auto_enable:Bool = true):Void {
+			if (!obj.exists) {
+				return;
+			}
+			
+			for (item in items) {
+				if (items.length >= obj.size_x * obj.size_y) {
+					return;
+				}
+				
+				obj.items.push(item);
+				
+				item.parent = obj;
+				if (auto_enable) {
+					item.enabled = true;
+				}
+				
+				if (obj.items.length == 1) {
+					item.focused = true;
+					item.on_focus(null);
+				}
+			}
+		};
+		
+		obj.debounce = function(duration:Float):Void {
+			if (!obj.exists || duration < 0) {
+				return;
+			}
+			
+			obj.enabled = false;
+			
+			if (obj.debounce_timer != null) {
+				obj.debounce_timer._timeCounter = 0;
+				obj.debounce_timer.time = Math.max(obj.debounce_timer.time, duration);
+			} else {
+				obj.debounce_timer = new FlxTimer().start(duration, function():Void {
+					obj.enabled = true;
+					
+					obj.debounce_timer = null;
+				});
+			}
+		};
+		
+		obj.update = function(elapsed:Float):Void {
+			if (!obj.exists || obj.frozen) {
+				return;
+			}
+			
+			if (obj.enabled && obj.items.length > 0) {
+				var controls:Controls = PlayerSettings.player1.controls;
+				if (controls != null) {
+					if (controls.BACK) {
+						obj.on_back();
+					} else if (controls.check("accept", 2)) { // JUST_PRESSED
+						obj.items[obj.selection].on_press();
+					} else if (controls.check("accept", -1)) { // JUST_RELEASED
+						obj.items[obj.selection].on_release();
+					} else {
+						var prev_selection:Int = obj.selection;
+						var prev_item:Dynamic = obj.items[prev_selection];
+						
+						var directions:Array<Bool> = [
+							controls.UI_LEFT_P,
+							controls.UI_DOWN_P,
+							controls.UI_UP_P,
+							controls.UI_RIGHT_P
+						];
+						
+						if (prev_item.auto_navigate) {
+							if (obj.size_x > 1) {
+								if (directions[0]) {
+									obj.selection -= 1;
+								}
+								
+								if (directions[3]) {
+									obj.selection += 1;
+								}
+								
+								var row:Int = Std.int(Math.floor(prev_selection / obj.size_x)) * obj.size_x;
+								if (obj.wrap_x) {
+									obj.selection = row + obj.selection % obj.size_x;
+								} else {
+									obj.selection = Std.int(Math.min(Math.max(obj.selection, row), row + obj.size_x - 1));
+								}
+							}
+							
+							if (obj.size_y > 1) {
+								if (directions[2]) {
+									obj.selection -= obj.size_x;
+								}
+								
+								if (directions[1]) {
+									obj.selection += obj.size_x;
+								}
+								
+								var column:Int = prev_selection % obj.size_x;
+								if (obj.wrap_y) {
+									obj.selection = (obj.selection + obj.items.length) % obj.items.length;
+								} else {
+									obj.selection = Std.int(Math.min(Math.max(obj.selection, column), obj.size_x * (obj.size_y - 1) + column));
+								}
+							}
+						}
+						
+						var direction_trigger:Bool = false;
+						for (direction in directions) {
+							if (direction) {
+								direction_trigger = true;
+								break;
+							}
+						}
+						
+						if (direction_trigger) {
+							prev_item.on_direction(directions);
+						}
+						
+						var cur_item:Dynamic = obj.items[obj.selection];
+						if (prev_selection != obj.selection) {
+							prev_item.focused = false;
+							cur_item.focused = true;
+							
+							prev_item.on_unfocus(cur_item);
+							cur_item.on_focus(prev_item);
+						}
+					}
+				}
+			}
+			
+			obj.on_update(elapsed);
+			
+			for (item in obj.items) {
+				if (item.exists) {
+					item.on_update(elapsed);
+				}
+			}
+		};
+		
+		obj.destroy = function():Void {
+			obj.data = null;
+			
+			obj.container = null;
+			
+			obj.enabled = false;
+			obj.frozen = true;
+			
+			obj.selection = -1;
+			while (obj.items.length > 0) {
+				obj.items.pop().destroy();
+			}
+			
+			obj.size_x = -1;
+			obj.size_y = -1;
+			
+			obj.wrap_x = false;
+			obj.wrap_y = false;
+			
+			obj.on_enter = null;
+			obj.on_exit = null;
+			obj.on_back = null;
+			
+			obj.on_update = null;
+			
+			if (obj.debounce_timer != null) {
+				obj.debounce_timer.cancel();
+				obj.debounce_timer.destroy();
+				obj.debounce_timer = null;
+			}
+			
+			obj.exists = false;
+			
+			alive.remove(obj);
+		};
+		
+		alive.push(obj);
+		
+		return obj;
+	}
+	
+	private var alive:Array<Menu> = new Array();
+	
+	override public function onUpdate(event:UpdateScriptEvent):Void {
+		for (menu in alive) {
+			menu.update(event.elapsed);
+		}
+	}
+	
+	override public function onDestroy(event:ScriptEvent):Void {
+		for (menu in alive) {
+			menu.destroy();
+		}
+	}
+}

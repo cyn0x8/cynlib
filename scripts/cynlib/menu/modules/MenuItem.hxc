@@ -1,0 +1,109 @@
+import flixel.FlxBasic;
+
+import funkin.modding.module.ScriptedModule;
+
+typedef MenuItem = {
+	data:Null<Dynamic>,
+	
+	menu:Null<Dynamic>,
+	container:Null<FlxBasic>,
+	
+	auto_navigate:Bool,
+	
+	enabled:Bool,
+	focused:Bool,
+	
+	on_focus:Null<(Dynamic)->Void>,
+	on_unfocus:Null<(Dynamic)->Void>,
+	on_direction:Null<(Array<Bool>)->Void>,
+	
+	on_press:Null<()->Void>,
+	on_release:Null<()->Void>,
+	
+	on_update:Null<(Float)->Void>,
+	
+	exists:Bool,
+	destroy:()->Void
+}
+
+typedef MenuItemData = {
+	data:Null<Dynamic>,
+	
+	menu:Null<Dynamic>,
+	container:Null<FlxBasic>,
+	
+	auto_navigate:Null<Bool>,
+	
+	on_focus:Null<(Dynamic)->Void>,
+	on_unfocus:Null<(Dynamic)->Void>,
+	on_direction:Null<(Array<Bool>)->Void>,
+	
+	on_press:Null<()->Void>,
+	on_release:Null<()->Void>,
+	
+	on_update:Null<(Float)->Void>
+}
+
+class CL_MenuItem extends Module {
+	public function new() {
+		super("CL_MenuItem", -2147483648);
+	}
+	
+	override public function onCreate(event:ScriptEvent):Void {
+		active = false;
+	}
+	
+	public function new_menu(data:MenuItemData):Menu {
+		if (data == null) {
+			data = {};
+		}
+		
+		var obj:Dynamic = {
+			data: data.data == null ? {} : data.data,
+			
+			menu: data.menu,
+			container: data.container,
+			
+			auto_navigate: data.auto_nav == null ? true : data.auto_navigate,
+			
+			enabled: false,
+			focused: false,
+			
+			on_focus: data.on_focus == null ? function(prev:Null<Dynamic>):Void {} : data.on_focus,
+			on_unfocus: data.on_unfocus == null ? function(next:Dynamic):Void {} : data.on_unfocus,
+			on_direction: data.on_direction == null ? function(directions:Array<Bool>):Void {} : data.on_direction,
+				
+			on_press: data.on_press == null ? function():Void {} : data.on_press,
+			on_release: data.on_release == null ? function():Void {} : data.on_release,
+				
+			on_update: data.on_update == null ? function(elapsed:Float):Void {} : data.on_update,
+				
+			exists: true
+		};
+		
+		obj.destroy = function():Void {
+			obj.data = null;
+	
+			obj.parent = null;
+			obj.container = null;
+			
+			obj.auto_navigate = false;
+			
+			obj.enabled = false;,
+			obj.focused = false;,
+			
+			obj.on_focus = null;
+			obj.on_unfocus = null;
+			obj.on_direction = null;
+			
+			obj.on_press = null;
+			obj.on_release = null;
+			
+			obj.on_update = null;
+			
+			obj.exists = false;
+		};
+		
+		return obj;
+	}
+}
