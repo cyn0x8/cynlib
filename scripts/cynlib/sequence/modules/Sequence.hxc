@@ -1,0 +1,88 @@
+import flixel.util.FlxTimer;
+
+import funkin.modding.module.Module;
+
+typedef SequenceEvent = {
+	time:Float,
+	callback:()->Void
+}
+
+typedef Sequence = {
+	timers:Array<FlxTimer>,
+	
+	_running:Bool,
+	get_running:()->Bool,
+	set_running:(Bool)->Bool,
+	
+	completed:()->Bool,
+	
+	destroy:()->Void
+}
+
+class CL_Sequence extends Module {
+	public function new() {
+		super("CL_Sequence", -2147483648);
+	}
+	
+	public function new_sequence(events:Array<SequenceEvent>, mult:Float = 1, start:Bool = true):Sequence {
+		var obj:Dynamic = {
+			timers: new Array(),
+			
+			_running: true
+		};
+		
+		obj.get_running: function():Bool {
+			return !obj.completed() && obj._running;
+		};
+		
+		obj.set_running: function(v:Bool):Bool {
+			for (timer in obj.timers) {
+				timer.active = v;
+			}
+			
+			return obj._running = v;
+		};
+		
+		obj.completed: function():Bool {
+			var completed:Bool = obj.timers.length == 0;
+			if (completed) {
+				obj._running = false;
+			}
+			
+			return completed;
+		};
+		
+		obj.destroy: function():Void {
+			for (timer in obj.timers) {
+				timer.cancel();
+				timer.destroy();
+			}
+			
+			while (!obj.completed()) {
+				obj.timers.pop();
+			}
+		};
+		
+		for (event in events) {
+			obj.timers.push(new FlxTimer().start(
+				event.time * mult,
+				function(timer:FlxTimer):Void {
+					event.callback();
+					obj.timers.remove(timer);
+				}
+			));
+		}
+		
+		obj.set_running(start);
+		
+		return obj;
+	}
+	
+	private var alive:Array<Sequence> = new Array();
+	
+	override public function onDestroy(event:ScriptEvent):Void {
+		for (sequence in alive) {
+			sequence.destroy();
+		}
+	}
+}
