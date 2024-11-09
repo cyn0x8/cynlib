@@ -1,0 +1,114 @@
+import thx.Objects;
+import thx.Types;
+
+import flixel.FlxG;
+import flixel.math.FlxMath;
+import flixel.tweens.FlxEase;
+
+import funkin.modding.module.ScriptedModule;
+
+class CL_GenUtil extends ScriptedModule {
+	public function new() {
+		super("CL_GenUtil", -2147483648);
+	}
+	
+	override public function onCreate(event:ScriptEvent):Void {
+		active = false;
+	}
+	
+	public function try_exp(func:()->Void, ?caught:()->Void):Void {
+		var try_block:()->Null<Bool> = function():Null<Bool> {
+			var success:Bool = true;
+			try {func();} catch (e:Dynamic) {}
+			return success;
+		};
+		
+		if (try_block() != true && caught != null) {caught();}
+	}
+	
+	public function obj_merge(a:Dynamic, b:Dynamic, exclusive:Bool = false):Dynamic {
+		var ret:Dynamic = Objects.clone(a);
+		
+		for (path in obj_paths(exclusive ? a : b)) {
+			var a_val:Dynamic = Objects.getPath(a, path);
+			var b_val:Dynamic = Objects.getPath(b, path);
+			
+			if (b_val == null) {
+				continue;
+			}
+			
+			if (Types.isAnonymousObject(a_val) && Types.isAnonymousObject(b_val)) {
+				Objects.setPath(ret, path, obj_merge(a_val, b_val, exclusive));
+			} else {
+				Objects.setPath(ret, path, b_val);
+			}
+		}
+		
+		return ret;
+	}
+	
+	public function obj_paths(obj:Dynamic):Array<String> {
+		var ret:Array<String> = [];
+		
+		for (key in Objects.fields(obj)) {
+			ret.push(key);
+			
+			var val:Dynamic = Objects.getPath(obj, key);
+			if (Types.isAnonymousObject(val)) {
+				for (sub_key in obj_paths(val)) {
+					ret.push(key + "." + sub_key);
+				}
+			}
+		}
+		
+		return ret;
+	}
+	
+	public function shuffle_array(array:Array<Dynamic>):Array<Dynamic> {
+		var ret:Array<Dynamic> = array.copy();
+		
+		// fisher-yates method
+		for (i in 0 ... ret.length - 1) {
+			var j:Int = FlxG.random.int(i, ret.length - 1);
+			var temp:Dynamic = ret[i];
+			ret[i] = ret[j];
+			ret[j] = temp;
+		}
+		
+		return ret;
+	}
+	
+	public var eases:Dynamic = {
+		quadin: FlxEase.quadIn,                 quadout: FlxEase.quadOut,                 quadinout: FlxEase.quadInOut,
+		cubein: FlxEase.cubeIn,                 cubeout: FlxEase.cubeOut,                 cubeinout: FlxEase.cubeInOut,
+		quartin: FlxEase.quartIn,               quartout: FlxEase.quartOut,               quartinout: FlxEase.quartInOut,
+		quintin: FlxEase.quintIn,               quintout: FlxEase.quintOut,               quintinout: FlxEase.quintInOut,
+		expoin: FlxEase.expoIn,                 expoout: FlxEase.expoOut,                 expoinout: FlxEase.expoInOut,
+		sinein: FlxEase.sineIn,                 sineout: FlxEase.sineOut,                 sineinout: FlxEase.sineInOut,
+		circin: FlxEase.circIn,                 circout: FlxEase.circOut,                 circinout: FlxEase.circInOut,
+		smoothstepin: FlxEase.smoothStepIn,     smoothstepout: FlxEase.smoothStepOut,     smoothstepinout: FlxEase.smoothStepInOut,
+		smootherstepin: FlxEase.smootherStepIn, smootherstepout: FlxEase.smootherStepOut, smootherstepinout: FlxEase.smootherStepInOut,
+		backin: FlxEase.backIn,                 backout: FlxEase.backOut,                 backinout: FlxEase.backInOut,
+		bouncein: FlxEase.bounceIn,             bounceout: FlxEase.bounceOut,             bounceinout: FlxEase.bounceInOut,
+		elasticin: FlxEase.elasticIn,           elasticout: FlxEase.elasticOut,           elasticinout: FlxEase.elasticInOut,
+		linear: FlxEase.linear
+	};
+	
+	public function get_ease(?name:String):Dynamic {
+		if (name == null) {
+			name = "linear";
+		}
+		
+		name = StringTools.replace(name, " ", "");
+		name = StringTools.replace(name, "-", "");
+		name = StringTools.replace(name, "_", "");
+		name = StringTools.trim(name);
+		name = name.toLowerCase();
+		
+		if (Objects.getPath(eases, name) == null) {
+			name = "linear";
+		}
+		
+		return Objects.getPath(eases, name);
+	}
+}

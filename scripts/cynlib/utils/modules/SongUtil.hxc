@@ -1,0 +1,90 @@
+import Bool;
+import Float;
+import Int;
+import String;
+import StringTools;
+
+import thx.Objects;
+
+import funkin.data.song.SongEventDataRaw;
+import funkin.modding.module.ScriptedModule;
+
+class CL_SongUtil extends ScriptedModule {
+	public function new() {
+		super("CL_SongUtil", -2147483648);
+	}
+	
+	override public function onCreate(event:ScriptEvent):Void {
+		active = false;
+	}
+	
+	public function event_get_dynamic(event:SongEventDataRaw, key:String):Null<Dynamic> {
+		return event.value == null ? null : Objects.getPath(event.value, key);
+	}
+	
+	public function event_get_bool(event:SongEventDataRaw, key:String):Null<Bool> {
+		return event.value == null ? null : (Objects.getPath(event.value, key) == true);
+	}
+	
+	public function event_get_int(event:SongEventDataRaw, key:String):Null<Int> {
+		if (event.value == null) {
+			return null;
+		}
+		
+		var result:Dynamic = Objects.getPath(event.value, key);
+		if (result == null) {
+			return null;
+		}
+		
+		if (Std.isOfType(result, Int)) {
+			return result;
+		}
+		
+		if (Std.isOfType(result, Float)) {
+			return Std.int(result);
+		}
+		
+		if (Std.isOfType(result, String)) {
+			return Std.parseInt(result);
+		}
+		
+		return null;
+	}
+	
+	public function event_get_float(event:SongEventDataRaw, key:String):Null<Float> {
+		if (event.value == null) {
+			return null;
+		}
+		
+		var result:Dynamic = Objects.getPath(event.value, key);
+		if (result == null) {
+			return null;
+		}
+		
+		if (Std.isOfType(result, Float)) {
+			return result;
+		}
+		
+		if (Std.isOfType(result, Int)) {
+			return result.toFloat();
+		}
+		
+		if (Std.isOfType(result, String)) {
+			return Std.parseFloat(result);
+		}
+		
+		return null;
+	}
+	
+	public function event_get_string(event:SongEventDataRaw, key:String):Null<String> {
+		return event.value == null ? null : Objects.getPath(event.value, key);
+	}
+	
+	public function event_get_array(event:SongEventDataRaw, key:String):Null<Array<Dynamic>> {
+		return event.value == null ? null : Objects.getPath(event.value, key);
+	}
+	
+	public function event_get_bool_array(event:SongEventDataRaw, key:String):Null<Array<Bool>> {
+		return event.value == null ? null : Objects.getPath(event.value, key);
+	}
+}

@@ -1,0 +1,27 @@
+import flixel.math.FlxMath;
+
+import funkin.modding.module.ScriptedModule;
+import funkin.util.MathUtil;
+
+class CL_MathUtil extends ScriptedModule {
+	public function new() {
+		super("CL_MathUtil", -2147483648);
+	}
+	
+	override public function onCreate(event:ScriptEvent):Void {
+		active = false;
+	}
+	
+	public function remap(a1:Float, b1:Float, a2:Float, b2:Float, v:Float, bound:Bool = false):Float {
+		var t:Float = inverse_lerp(a1, b1, v);
+		if (bound) {
+			FlxMath.bound(v, 0, 1);
+		}
+		
+		return MathUtil.lerp(a2, b2, t);
+	}
+	
+	public function inverse_lerp(a:Float, b:Float, v:Float):Float {
+		return (v - a) / (b - a);
+	}
+}
