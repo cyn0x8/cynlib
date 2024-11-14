@@ -1,0 +1,60 @@
+import haxe.ds.StringMap;
+
+import flixel.FlxG;
+
+import funkin.modding.module.ModuleHandler;
+import funkin.modding.module.ScriptedModule;
+import funkin.play.PlayState;
+
+typedef ReloadData = {
+	module:String,
+	callback:Null<String>,
+	variables:Null<()->StringMap>
+}
+
+class CL_Reloader extends ScriptedModule {
+	public function new() {
+		super("CL_Reloader", -2147483648);
+	}
+	
+	public var reload_pre:Array<ReloadData> = new Array();
+	public var reload_post:Array<ReloadData> = new Array();
+	
+	private var reload:(Array<ReloadData>)->Void = function(reload_data:Array<ReloadData>):Void {
+		reload_data = reload_data.copy();
+		for (data in reload_data) {
+			if (data.variables != null) {
+				var variables:StringMap = data.variables();
+				for (key in variables.keys()) {
+					ModuleHandler.getModule(data.module).scriptSet(key, variables.get(key));
+				}
+			}
+			
+			if (data.callback != null) {
+				ModuleHandler.getModule(data.module).scriptCall(data.callback);
+			}
+		}
+	}
+	
+	private var pressedReload:Bool = false;
+	override public function onUpdate(event:UpdateScriptEvent):Void {
+		pressed_reload = FlxG.keys.justPressed.F5;
+	}
+	
+	override public function onDestroy(event:ScriptEvent):Void {
+		if (
+			(PlayState.instance != null && PlayState.instance.criticalFailure) ||
+			(!FlxG.keys.justPressed.F5 && !pressed_reload)
+		) {
+			return;
+		}
+		
+		FlxG.signals.preStateSwitch.addOnce(function():Void {
+			reload(reload_pre);
+		});
+		
+		FlxG.signals.postStateSwitch.addOnce(function():Void {
+			reload(reload_post);
+		});
+	}
+}
