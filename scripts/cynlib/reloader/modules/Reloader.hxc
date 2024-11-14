@@ -36,7 +36,7 @@ class CL_Reloader extends ScriptedModule {
 		}
 	}
 	
-	private var pressedReload:Bool = false;
+	private var pressed_reload:Bool = false;
 	override public function onUpdate(event:UpdateScriptEvent):Void {
 		pressed_reload = FlxG.keys.justPressed.F5;
 	}
