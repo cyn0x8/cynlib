@@ -31,11 +31,11 @@ class CL_Sequence extends Module {
 			_running: true
 		};
 		
-		obj.get_running: function():Bool {
+		obj.get_running = function():Bool {
 			return !obj.completed() && obj._running;
 		};
 		
-		obj.set_running: function(v:Bool):Bool {
+		obj.set_running = function(v:Bool):Bool {
 			for (timer in obj.timers) {
 				timer.active = v;
 			}
@@ -43,7 +43,7 @@ class CL_Sequence extends Module {
 			return obj._running = v;
 		};
 		
-		obj.completed: function():Bool {
+		obj.completed = function():Bool {
 			var completed:Bool = obj.timers.length == 0;
 			if (completed) {
 				obj._running = false;
@@ -52,7 +52,7 @@ class CL_Sequence extends Module {
 			return completed;
 		};
 		
-		obj.destroy: function():Void {
+		obj.destroy = function():Void {
 			for (timer in obj.timers) {
 				timer.cancel();
 				timer.destroy();

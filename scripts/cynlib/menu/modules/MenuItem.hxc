@@ -44,7 +44,7 @@ typedef MenuItemData = {
 	on_update:Null<(Float)->Void>
 }
 
-class CL_MenuItem extends Module {
+class CL_MenuItem extends ScriptedModule {
 	public function new() {
 		super("CL_MenuItem", -2147483648);
 	}
@@ -89,8 +89,8 @@ class CL_MenuItem extends Module {
 			
 			obj.auto_navigate = false;
 			
-			obj.enabled = false;,
-			obj.focused = false;,
+			obj.enabled = false;
+			obj.focused = false;
 			
 			obj.on_focus = null;
 			obj.on_unfocus = null;

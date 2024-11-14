@@ -57,7 +57,7 @@ typedef MenuData = {
 	on_update:Null<(Float)->Void>
 }
 
-class CL_Menu extends Module {
+class CL_Menu extends ScriptedModule {
 	public function new() {
 		super("CL_Menu", -2147483648);
 	}
