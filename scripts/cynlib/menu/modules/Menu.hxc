@@ -16,22 +16,22 @@ typedef Menu = {
 	selection:Int,
 	items:Array<Dynamic>,
 	
-	size_x:Int,
-	size_y:Int,
+	sizeX:Int,
+	sizeY:Int,
 	
-	wrap_x:Bool,
-	wrap_y:Bool,
+	wrapX:Bool,
+	wrapY:Bool,
 	
-	on_enter:Null<()->Void>,
-	on_exit:Null<()->Void>,
-	on_back:Null<()->Void>,
+	onEnter:Null<()->Void>,
+	onExit:Null<()->Void>,
+	onBack:Null<()->Void>,
 	
-	on_update:Null<(Float)->Void>,
+	onUpdate:Null<(Float)->Void>,
 	
-	push_items:(Array<Dynamic>)->Void,
+	pushItems:(Array<Dynamic>)->Void,
 	
 	debounce:(Float)->Void,
-	debounce_timer:Null<FlxTimer>,
+	debounceTimer:Null<FlxTimer>,
 	
 	update:(Float)->Void,
 	
@@ -44,17 +44,17 @@ typedef MenuData = {
 	
 	container:Null<FlxBasic>,
 	
-	size_x:Null<Int>,
-	size_y:Null<Int>,
+	sizeX:Null<Int>,
+	sizeY:Null<Int>,
 	
-	wrap_x:Null<Bool>,
-	wrap_y:Null<Bool>,
+	wrapX:Null<Bool>,
+	wrapY:Null<Bool>,
 	
-	on_enter:Null<()->Void>,
-	on_exit:Null<()->Void>,
-	on_back:Null<()->Void>,
+	onEnter:Null<()->Void>,
+	onExit:Null<()->Void>,
+	onBack:Null<()->Void>,
 	
-	on_update:Null<(Float)->Void>
+	onUpdate:Null<(Float)->Void>
 }
 
 class CL_Menu extends ScriptedModule {
@@ -62,7 +62,7 @@ class CL_Menu extends ScriptedModule {
 		super("CL_Menu", -2147483648);
 	}
 	
-	public function new_menu(data:MenuData):Menu {
+	public function new_Menu(data:MenuData):Menu {
 		if (data == null) {
 			data = {};
 		}
@@ -78,41 +78,41 @@ class CL_Menu extends ScriptedModule {
 			selection: 0,
 			items: new Array(),
 			
-			wrap_x: data.wrap_x == null ? true : data.wrap_x,
-			wrap_y: data.wrap_y == null ? true : data.wrap_y,
+			wrapX: data.wrapX == null ? true : data.wrapX,
+			wrapY: data.wrapY == null ? true : data.wrapY,
 			
-			on_enter: data.on_enter == null ? function():Void {} : data.on_enter,
-			on_exit: data.on_exit == null ? function():Void {} : data.on_exit,
-			on_back: data.on_back == null ? function():Void {} : data.on_back,
+			onEnter: data.onEnter == null ? function():Void {} : data.onEnter,
+			onExit: data.onExit == null ? function():Void {} : data.onExit,
+			onBack: data.onBack == null ? function():Void {} : data.onBack,
 			
-			on_update: data.on_update == null ? function(elapsed:Float):Void {} : data.on_update,
+			onUpdate: data.onUpdate == null ? function(elapsed:Float):Void {} : data.onUpdate,
 			
 			enabled: false
 		};
 		
-		obj.size_x = Std.int(data.size_x == null ? 1 : Math.max(1, data.size_x));
-		obj.size_y = Std.int(data.size_y == null ? Math.max(1, obj.items.length) / obj.size_x : Math.max(1, data.size_y));
+		obj.sizeX = Std.int(data.sizeX == null ? 1 : Math.max(1, data.sizeX));
+		obj.sizeY = Std.int(data.sizeY == null ? Math.max(1, obj.items.length) / obj.sizeX : Math.max(1, data.sizeY));
 		
-		obj.push_items = function(items:Array<Dynamic>, auto_enable:Bool = true):Void {
+		obj.pushItems = function(items:Array<Dynamic>, autoEnable:Bool = true):Void {
 			if (!obj.exists) {
 				return;
 			}
 			
 			for (item in items) {
-				if (items.length >= obj.size_x * obj.size_y) {
+				if (items.length >= obj.sizeX * obj.sizeY) {
 					return;
 				}
 				
 				obj.items.push(item);
 				
 				item.parent = obj;
-				if (auto_enable) {
+				if (autoEnable) {
 					item.enabled = true;
 				}
 				
 				if (obj.items.length == 1) {
 					item.focused = true;
-					item.on_focus(null);
+					item.onFocus(null);
 				}
 			}
 		};
@@ -124,14 +124,14 @@ class CL_Menu extends ScriptedModule {
 			
 			obj.enabled = false;
 			
-			if (obj.debounce_timer != null) {
-				obj.debounce_timer._timeCounter = 0;
-				obj.debounce_timer.time = Math.max(obj.debounce_timer.time, duration);
+			if (obj.debounceTimer != null) {
+				obj.debounceTimer._timeCounter = 0;
+				obj.debounceTimer.time = Math.max(obj.debounceTimer.time, duration);
 			} else {
-				obj.debounce_timer = new FlxTimer().start(duration, function():Void {
+				obj.debounceTimer = new FlxTimer().start(duration, function():Void {
 					obj.enabled = true;
 					
-					obj.debounce_timer = null;
+					obj.debounceTimer = null;
 				});
 			}
 		};
@@ -145,14 +145,14 @@ class CL_Menu extends ScriptedModule {
 				var controls:Controls = PlayerSettings.player1.controls;
 				if (controls != null) {
 					if (controls.BACK) {
-						obj.on_back();
+						obj.onBack();
 					} else if (controls.check("accept", 2)) { // JUST_PRESSED
-						obj.items[obj.selection].on_press();
+						obj.items[obj.selection].onPress();
 					} else if (controls.check("accept", -1)) { // JUST_RELEASED
-						obj.items[obj.selection].on_release();
+						obj.items[obj.selection].onRelease();
 					} else {
-						var prev_selection:Int = obj.selection;
-						var prev_item:Dynamic = obj.items[prev_selection];
+						var prevSelection:Int = obj.selection;
+						var prevItem:Dynamic = obj.items[prevSelection];
 						
 						var directions:Array<Bool> = [
 							controls.UI_LEFT_P,
@@ -161,8 +161,8 @@ class CL_Menu extends ScriptedModule {
 							controls.UI_RIGHT_P
 						];
 						
-						if (prev_item.auto_navigate) {
-							if (obj.size_x > 1) {
+						if (prevItem.autoNavigate) {
+							if (obj.sizeX > 1) {
 								if (directions[0]) {
 									obj.selection -= 1;
 								}
@@ -171,61 +171,61 @@ class CL_Menu extends ScriptedModule {
 									obj.selection += 1;
 								}
 								
-								var row:Int = Std.int(Math.floor(prev_selection / obj.size_x)) * obj.size_x;
-								if (obj.wrap_x) {
-									obj.selection = row + obj.selection % obj.size_x;
+								var row:Int = Std.int(Math.floor(prevSelection / obj.sizeX)) * obj.sizeX;
+								if (obj.wrapX) {
+									obj.selection = row + obj.selection % obj.sizeX;
 								} else {
-									obj.selection = Std.int(Math.min(Math.max(obj.selection, row), row + obj.size_x - 1));
+									obj.selection = Std.int(Math.min(Math.max(obj.selection, row), row + obj.sizeX - 1));
 								}
 							}
 							
-							if (obj.size_y > 1) {
+							if (obj.sizeY > 1) {
 								if (directions[2]) {
-									obj.selection -= obj.size_x;
+									obj.selection -= obj.sizeX;
 								}
 								
 								if (directions[1]) {
-									obj.selection += obj.size_x;
+									obj.selection += obj.sizeX;
 								}
 								
-								var column:Int = prev_selection % obj.size_x;
-								if (obj.wrap_y) {
+								var column:Int = prevSelection % obj.sizeX;
+								if (obj.wrapY) {
 									obj.selection = (obj.selection + obj.items.length) % obj.items.length;
 								} else {
-									obj.selection = Std.int(Math.min(Math.max(obj.selection, column), obj.size_x * (obj.size_y - 1) + column));
+									obj.selection = Std.int(Math.min(Math.max(obj.selection, column), obj.sizeX * (obj.sizeY - 1) + column));
 								}
 							}
 						}
 						
-						var direction_trigger:Bool = false;
+						var directionTrigger:Bool = false;
 						for (direction in directions) {
 							if (direction) {
-								direction_trigger = true;
+								directionTrigger = true;
 								break;
 							}
 						}
 						
-						if (direction_trigger) {
-							prev_item.on_direction(directions);
+						if (directionTrigger) {
+							prevItem.onDirection(directions);
 						}
 						
-						var cur_item:Dynamic = obj.items[obj.selection];
-						if (prev_selection != obj.selection) {
-							prev_item.focused = false;
-							cur_item.focused = true;
+						var curItem:Dynamic = obj.items[obj.selection];
+						if (prevSelection != obj.selection) {
+							prevItem.focused = false;
+							curItem.focused = true;
 							
-							prev_item.on_unfocus(cur_item);
-							cur_item.on_focus(prev_item);
+							prevItem.onUnfocus(curItem);
+							curItem.onFocus(prevItem);
 						}
 					}
 				}
 			}
 			
-			obj.on_update(elapsed);
+			obj.onUpdate(elapsed);
 			
 			for (item in obj.items) {
 				if (item.exists) {
-					item.on_update(elapsed);
+					item.onUpdate(elapsed);
 				}
 			}
 		};
@@ -243,22 +243,22 @@ class CL_Menu extends ScriptedModule {
 				obj.items.pop().destroy();
 			}
 			
-			obj.size_x = -1;
-			obj.size_y = -1;
+			obj.sizeX = -1;
+			obj.sizeY = -1;
 			
-			obj.wrap_x = false;
-			obj.wrap_y = false;
+			obj.wrapX = false;
+			obj.wrapY = false;
 			
-			obj.on_enter = null;
-			obj.on_exit = null;
-			obj.on_back = null;
+			obj.onEnter = null;
+			obj.onExit = null;
+			obj.onBack = null;
 			
-			obj.on_update = null;
+			obj.onUpdate = null;
 			
-			if (obj.debounce_timer != null) {
-				obj.debounce_timer.cancel();
-				obj.debounce_timer.destroy();
-				obj.debounce_timer = null;
+			if (obj.debounceTimer != null) {
+				obj.debounceTimer.cancel();
+				obj.debounceTimer.destroy();
+				obj.debounceTimer = null;
 			}
 			
 			obj.exists = false;

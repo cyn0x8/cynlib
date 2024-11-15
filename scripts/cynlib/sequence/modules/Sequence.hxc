@@ -24,7 +24,7 @@ class CL_Sequence extends Module {
 		super("CL_Sequence", -2147483648);
 	}
 	
-	public function new_sequence(events:Array<SequenceEvent>, mult:Float = 1, start:Bool = true):Sequence {
+	public function new_Sequence(events:Array<SequenceEvent>, mult:Float = 1, start:Bool = true):Sequence {
 		var obj:Dynamic = {
 			timers: new Array(),
 			
@@ -61,6 +61,10 @@ class CL_Sequence extends Module {
 			while (!obj.completed()) {
 				obj.timers.pop();
 			}
+			
+			obj._running = false;
+			
+			alive.remove(obj);
 		};
 		
 		for (event in events) {
@@ -74,6 +78,8 @@ class CL_Sequence extends Module {
 		}
 		
 		obj.set_running(start);
+		
+		alive.push(obj);
 		
 		return obj;
 	}

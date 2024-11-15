@@ -18,15 +18,15 @@ class CL_SongUtil extends ScriptedModule {
 		active = false;
 	}
 	
-	public function event_get_dynamic(event:SongEventDataRaw, key:String):Null<Dynamic> {
+	public function eventGetDynamic(event:SongEventDataRaw, key:String):Null<Dynamic> {
 		return event.value == null ? null : Objects.getPath(event.value, key);
 	}
 	
-	public function event_get_bool(event:SongEventDataRaw, key:String):Null<Bool> {
+	public function eventGetBool(event:SongEventDataRaw, key:String):Null<Bool> {
 		return event.value == null ? null : (Objects.getPath(event.value, key) == true);
 	}
 	
-	public function event_get_int(event:SongEventDataRaw, key:String):Null<Int> {
+	public function eventGetInt(event:SongEventDataRaw, key:String):Null<Int> {
 		if (event.value == null) {
 			return null;
 		}
@@ -51,7 +51,7 @@ class CL_SongUtil extends ScriptedModule {
 		return null;
 	}
 	
-	public function event_get_float(event:SongEventDataRaw, key:String):Null<Float> {
+	public function eventGetFloat(event:SongEventDataRaw, key:String):Null<Float> {
 		if (event.value == null) {
 			return null;
 		}
@@ -76,15 +76,15 @@ class CL_SongUtil extends ScriptedModule {
 		return null;
 	}
 	
-	public function event_get_string(event:SongEventDataRaw, key:String):Null<String> {
+	public function eventGetString(event:SongEventDataRaw, key:String):Null<String> {
 		return event.value == null ? null : Objects.getPath(event.value, key);
 	}
 	
-	public function event_get_array(event:SongEventDataRaw, key:String):Null<Array<Dynamic>> {
+	public function eventGetArray(event:SongEventDataRaw, key:String):Null<Array<Dynamic>> {
 		return event.value == null ? null : Objects.getPath(event.value, key);
 	}
 	
-	public function event_get_bool_array(event:SongEventDataRaw, key:String):Null<Array<Bool>> {
+	public function eventGetBoolArray(event:SongEventDataRaw, key:String):Null<Array<Bool>> {
 		return event.value == null ? null : Objects.getPath(event.value, key);
 	}
 }

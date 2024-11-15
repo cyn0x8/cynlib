@@ -17,12 +17,12 @@ class CL_Reloader extends ScriptedModule {
 		super("CL_Reloader", -2147483648);
 	}
 	
-	public var reload_pre:Array<ReloadData> = new Array();
-	public var reload_post:Array<ReloadData> = new Array();
+	public var reloadPre:Array<ReloadData> = new Array();
+	public var reloadPost:Array<ReloadData> = new Array();
 	
-	private var reload:(Array<ReloadData>)->Void = function(reload_data:Array<ReloadData>):Void {
-		reload_data = reload_data.copy();
-		for (data in reload_data) {
+	private var reload:(Array<ReloadData>)->Void = function(reloadData:Array<ReloadData>):Void {
+		reloadData = reloadData.copy();
+		for (data in reloadData) {
 			if (data.variables != null) {
 				var variables:StringMap = data.variables();
 				for (key in variables.keys()) {
@@ -36,25 +36,25 @@ class CL_Reloader extends ScriptedModule {
 		}
 	}
 	
-	private var pressed_reload:Bool = false;
+	private var pressedReload:Bool = false;
 	override public function onUpdate(event:UpdateScriptEvent):Void {
-		pressed_reload = FlxG.keys.justPressed.F5;
+		pressedReload = FlxG.keys.justPressed.F5;
 	}
 	
 	override public function onDestroy(event:ScriptEvent):Void {
 		if (
 			(PlayState.instance != null && PlayState.instance.criticalFailure) ||
-			(!FlxG.keys.justPressed.F5 && !pressed_reload)
+			(!FlxG.keys.justPressed.F5 && !pressedReload)
 		) {
 			return;
 		}
 		
 		FlxG.signals.preStateSwitch.addOnce(function():Void {
-			reload(reload_pre);
+			reload(reloadPre);
 		});
 		
 		FlxG.signals.postStateSwitch.addOnce(function():Void {
-			reload(reload_post);
+			reload(reloadPost);
 		});
 	}
 }

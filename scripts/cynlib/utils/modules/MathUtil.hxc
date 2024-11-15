@@ -13,7 +13,7 @@ class CL_MathUtil extends ScriptedModule {
 	}
 	
 	public function remap(a1:Float, b1:Float, a2:Float, b2:Float, v:Float, bound:Bool = false):Float {
-		var t:Float = inverse_lerp(a1, b1, v);
+		var t:Float = inverseLerp(a1, b1, v);
 		if (bound) {
 			FlxMath.bound(v, 0, 1);
 		}
@@ -21,7 +21,7 @@ class CL_MathUtil extends ScriptedModule {
 		return MathUtil.lerp(a2, b2, t);
 	}
 	
-	public function inverse_lerp(a:Float, b:Float, v:Float):Float {
+	public function inverseLerp(a:Float, b:Float, v:Float):Float {
 		return (v - a) / (b - a);
 	}
 }

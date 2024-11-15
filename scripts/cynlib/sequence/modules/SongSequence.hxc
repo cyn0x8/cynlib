@@ -11,7 +11,7 @@ typedef SequenceEvent = {
 typedef SongSequence = {
 	timers:Array<SequenceEvent>,
 	
-	start_time:Float,
+	startTime:Float,
 	
 	_running:Bool,
 	get_running:()->Bool,
@@ -29,11 +29,11 @@ class CL_SongSequence extends Module {
 		super("CL_SongSequence", -2147483648);
 	}
 	
-	public function new_song_sequence(events:Array<SequenceEvent>, mult:Float = 1, start:Bool = true):SongSequence {
+	public function new_SongSequence(events:Array<SequenceEvent>, mult:Float = 1, start:Bool = true):SongSequence {
 		var obj:Dynamic = {
 			timers: new Array(),
 			
-			start_time: Conductor.get_instance().songPosition,
+			startTime: Conductor.get_instance().songPosition,
 			
 			_running: true
 		};
@@ -44,7 +44,7 @@ class CL_SongSequence extends Module {
 		
 		obj.set_running = function(v:Bool):Bool {
 			if (v != obj._running) {
-				obj.start_time = Conductor.get_instance().songPosition - obj.start_time; // it works trust me
+				obj.startTime = Conductor.get_instance().songPosition - obj.startTime; // it works trust me
 			}
 			
 			return obj._running = v;
@@ -60,14 +60,14 @@ class CL_SongSequence extends Module {
 		};
 		
 		obj.update = function(elapsed:Float):Void {
-			if (!obj._running) {
+			if (!obj.get_running()) {
 				return;
 			}
 			
 			var len:Int = obj.timers.length;
 			for (i in 0...len) {
 				var timer:SequenceEvent = obj.timers[len - 1 - i];
-				if (timer.time + obj.start_time > Conductor.get_instance().songPosition) {
+				if (timer.time + obj.startTime > Conductor.get_instance().songPosition) {
 					timer.callback();
 					obj.timers.remove(timer);
 				}

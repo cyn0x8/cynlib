@@ -16,38 +16,42 @@ class CL_GenUtil extends ScriptedModule {
 		active = false;
 	}
 	
-	public function try_exp(func:()->Void, ?caught:()->Void):Void {
-		var try_block:()->Null<Bool> = function():Null<Bool> {
+	public function tryBlock(func:()->Void, ?caught:()->Void):Void {
+		var block:()->Null<Bool> = function():Null<Bool> {
 			var success:Bool = true;
-			try {func();} catch (e:Dynamic) {}
+			
+			try {
+				func();
+			} catch (e:Dynamic) {}
+			
 			return success;
 		};
 		
-		if (try_block() != true && caught != null) {caught();}
+		if (block() != true && caught != null) {caught();}
 	}
 	
-	public function obj_merge(a:Dynamic, b:Dynamic, exclusive:Bool = false):Dynamic {
+	public function objectMerge(a:Dynamic, b:Dynamic, exclusive:Bool = false):Dynamic {
 		var ret:Dynamic = Objects.clone(a);
 		
-		for (path in obj_paths(exclusive ? a : b)) {
-			var a_val:Dynamic = Objects.getPath(a, path);
-			var b_val:Dynamic = Objects.getPath(b, path);
+		for (path in objectPaths(exclusive ? a : b)) {
+			var aVal:Dynamic = Objects.getPath(a, path);
+			var bVal:Dynamic = Objects.getPath(b, path);
 			
-			if (b_val == null) {
+			if (bVal == null) {
 				continue;
 			}
 			
-			if (Types.isAnonymousObject(a_val) && Types.isAnonymousObject(b_val)) {
-				Objects.setPath(ret, path, obj_merge(a_val, b_val, exclusive));
+			if (Types.isAnonymousObject(aVal) && Types.isAnonymousObject(bVal)) {
+				Objects.setPath(ret, path, objectMerge(aVal, bVal, exclusive));
 			} else {
-				Objects.setPath(ret, path, b_val);
+				Objects.setPath(ret, path, bVal);
 			}
 		}
 		
 		return ret;
 	}
 	
-	public function obj_paths(obj:Dynamic):Array<String> {
+	public function objectPaths(obj:Dynamic):Array<String> {
 		var ret:Array<String> = [];
 		
 		for (key in Objects.fields(obj)) {
@@ -55,8 +59,8 @@ class CL_GenUtil extends ScriptedModule {
 			
 			var val:Dynamic = Objects.getPath(obj, key);
 			if (Types.isAnonymousObject(val)) {
-				for (sub_key in obj_paths(val)) {
-					ret.push(key + "." + sub_key);
+				for (subkey in objectPaths(val)) {
+					ret.push(key + "." + subkey);
 				}
 			}
 		}
@@ -64,7 +68,7 @@ class CL_GenUtil extends ScriptedModule {
 		return ret;
 	}
 	
-	public function shuffle_array(array:Array<Dynamic>):Array<Dynamic> {
+	public function shuffleArray(array:Array<Dynamic>):Array<Dynamic> {
 		var ret:Array<Dynamic> = array.copy();
 		
 		// fisher-yates method
@@ -94,7 +98,7 @@ class CL_GenUtil extends ScriptedModule {
 		linear: FlxEase.linear
 	};
 	
-	public function get_ease(?name:String):Dynamic {
+	public function getEase(?name:String):Dynamic {
 		if (name == null) {
 			name = "linear";
 		}
