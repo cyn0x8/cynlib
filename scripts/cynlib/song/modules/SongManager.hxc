@@ -27,6 +27,7 @@ class CL_SongManager extends ScriptedModule {
 		countdownStep: new Array(),
 		countdownEnd: new Array(),
 		
+		songCreate: new Array(),
 		songLoaded: new Array(),
 		songStart: new Array(),
 		songEnd: new Array(),
@@ -44,7 +45,7 @@ class CL_SongManager extends ScriptedModule {
 		destroy: new Array()
 	};
 	
-	public function onStageCreate():Void {
+	public function onStageCreate(event:ScriptEvent):Void {
 		songVars.stage = PlayState.instance.currentStage;
 		
 		for (callback in callbacks.stageCreate) {
@@ -120,6 +121,12 @@ class CL_SongManager extends ScriptedModule {
 	
 	override public function onCountdownEnd(event:CountdownScriptEvent):Void {
 		for (callback in callbacks.countdownEnd) {
+			callback(event, songVars);
+		}
+	}
+	
+	override public function onSongCreate(event:ScriptEvent):Void {
+		for (callback in callbacks.songCreate) {
 			callback(event, songVars);
 		}
 	}

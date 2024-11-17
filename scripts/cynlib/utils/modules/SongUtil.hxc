@@ -1,13 +1,17 @@
-import Bool;
 import Float;
 import Int;
 import String;
-import StringTools;
 
-import thx.Objects;
+import flixel.math.FlxPoint;
 
+import funkin.Conductor;
+import funkin.audio.FunkinSound;
+import funkin.data.event.SongEventRegistry;
 import funkin.data.song.SongEventDataRaw;
 import funkin.modding.module.ScriptedModule;
+import funkin.play.PlayState;
+import funkin.play.stage.Stage;
+import funkin.util.ReflectUtil;
 
 class CL_SongUtil extends ScriptedModule {
 	public function new() {
@@ -18,12 +22,61 @@ class CL_SongUtil extends ScriptedModule {
 		active = false;
 	}
 	
+	public function centerCamera():Void {
+		if (PlayState.instance == null) {
+			return;
+		}
+		
+		var stage:Stage = PlayState.instance.currentStage;
+		if (stage == null) {
+			return;
+		}
+		
+		var opponentFocus:FlxPoint = stage.getDad().cameraFocusPoint;
+		var playerFocus:FlxPoint = stage.getBoyfriend().cameraFocusPoint;
+		doEvent("FocusCamera", {
+			char: -1,
+			x: (opponentFocus.x + playerFocus.x) / 2,
+			y: (opponentFocus.y + playerFocus.y) / 2
+		});
+	}
+	
+	public function unmuteVocals():Void {
+		if (PlayState.instance == null || PlayState.instance.vocals == null) {
+			return;
+		}
+		
+		var opponentVocals:Null<FunkinSound> = PlayState.instance.vocals.getOpponentVoice();
+		if (opponentVocals != null) {
+			opponentVocals.volume = 1;
+		}
+		
+		var playerVocals:Null<FunkinSound> = PlayState.instance.vocals.getPlayerVoice();
+		if (playerVocals != null) {
+			playerVocals.volume = 1;
+		}
+	}
+	
+	public function doEvent(kind:String, ?value:Dynamic):Void {
+		if (PlayState.instance == null || Conductor.get_instance() == null) {
+			return;
+		}
+		
+		var event:SongEventDataRaw = new SongEventDataRaw(PlayState.instance.songPosition, kind, value);
+		var scriptEvent:SongEventScriptEvent = new SongEventScriptEvent(event);
+		if (!scriptEvent.eventCanceled) {
+			SongEventRegistry.handleEvent(event);
+		}
+		
+		PlayState.instance.dispatchEvent(scriptEvent);
+	}
+	
 	public function eventGetDynamic(event:SongEventDataRaw, key:String):Null<Dynamic> {
-		return event.value == null ? null : Objects.getPath(event.value, key);
+		return event.value == null ? null : ReflectUtil.getAnonymousField(event.value, key);
 	}
 	
 	public function eventGetBool(event:SongEventDataRaw, key:String):Null<Bool> {
-		return event.value == null ? null : (Objects.getPath(event.value, key) == true);
+		return event.value == null ? null : (ReflectUtil.getAnonymousField(event.value, key) == true);
 	}
 	
 	public function eventGetInt(event:SongEventDataRaw, key:String):Null<Int> {
@@ -31,7 +84,7 @@ class CL_SongUtil extends ScriptedModule {
 			return null;
 		}
 		
-		var result:Dynamic = Objects.getPath(event.value, key);
+		var result:Dynamic = ReflectUtil.getAnonymousField(event.value, key);
 		if (result == null) {
 			return null;
 		}
@@ -56,7 +109,7 @@ class CL_SongUtil extends ScriptedModule {
 			return null;
 		}
 		
-		var result:Dynamic = Objects.getPath(event.value, key);
+		var result:Dynamic = ReflectUtil.getAnonymousField(event.value, key);
 		if (result == null) {
 			return null;
 		}
@@ -77,14 +130,14 @@ class CL_SongUtil extends ScriptedModule {
 	}
 	
 	public function eventGetString(event:SongEventDataRaw, key:String):Null<String> {
-		return event.value == null ? null : Objects.getPath(event.value, key);
+		return event.value == null ? null : ReflectUtil.getAnonymousField(event.value, key);
 	}
 	
 	public function eventGetArray(event:SongEventDataRaw, key:String):Null<Array<Dynamic>> {
-		return event.value == null ? null : Objects.getPath(event.value, key);
+		return event.value == null ? null : ReflectUtil.getAnonymousField(event.value, key);
 	}
 	
 	public function eventGetBoolArray(event:SongEventDataRaw, key:String):Null<Array<Bool>> {
-		return event.value == null ? null : Objects.getPath(event.value, key);
+		return event.value == null ? null : ReflectUtil.getAnonymousField(event.value, key);
 	}
 }
