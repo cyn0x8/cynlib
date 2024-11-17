@@ -7,7 +7,6 @@ import funkin.modding.module.ScriptedModule;
 import funkin.play.PlayState;
 
 typedef ReloadData = {
-	module:String,
 	callback:Null<String>,
 	variables:Null<()->StringMap>
 }
@@ -17,21 +16,22 @@ class CL_Reloader extends ScriptedModule {
 		super("CL_Reloader", -2147483648);
 	}
 	
-	public var reloadPre:Array<ReloadData> = new Array();
-	public var reloadPost:Array<ReloadData> = new Array();
+	public var reloadPre:StringMap<ReloadData> = new StringMap();
+	public var reloadPost:StringMap<ReloadData> = new StringMap();
 	
-	private var reload:(Array<ReloadData>)->Void = function(reloadData:Array<ReloadData>):Void {
+	private var reload:(StringMap<ReloadData>)->Void = function(reloadData:StringMap<ReloadData>):Void {
 		reloadData = reloadData.copy();
-		for (data in reloadData) {
+		for (module in reloadData.keys()) {
+			var data:ReloadData = reloadData.get(module);
 			if (data.variables != null) {
 				var variables:StringMap = data.variables();
 				for (key in variables.keys()) {
-					ModuleHandler.getModule(data.module).scriptSet(key, variables.get(key));
+					ModuleHandler.getModule(module).scriptSet(key, variables.get(key));
 				}
 			}
 			
 			if (data.callback != null) {
-				ModuleHandler.getModule(data.module).scriptCall(data.callback);
+				ModuleHandler.getModule(module).scriptCall(data.callback);
 			}
 		}
 	}
