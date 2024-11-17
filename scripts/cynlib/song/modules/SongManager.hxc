@@ -1,0 +1,200 @@
+import thx.Objects;
+
+import funkin.modding.module.ScriptedModule;
+import funkin.play.PlayState;
+
+class CL_SongManager extends ScriptedModule {
+	public function new() {
+		super("CL_SongManager", -2147483648);
+	}
+	
+	public var songVars:Null<SongVars> = null;
+	public var callbacks:Dynamic = {
+		stageCreate: new Array(),
+		stageBuild: new Array(),
+		stageRefresh: new Array(),
+		stageReset: new Array(),
+		
+		pause: new Array(),
+		resume: new Array(),
+		
+		noteIncoming: new Array(),
+		noteHit: new Array(),
+		noteMiss: new Array(),
+		noteGhostMiss: new Array(),
+		
+		countdownStart: new Array(),
+		countdownStep: new Array(),
+		countdownEnd: new Array(),
+		
+		songLoaded: new Array(),
+		songStart: new Array(),
+		songEnd: new Array(),
+		songRetry: new Array(),
+		
+		stepHit: new Array(),
+		beatHit: new Array(),
+		
+		songEvent: new Array(),
+		
+		gameOver: new Array(),
+		
+		update: new Array(),
+		
+		destroy: new Array()
+	};
+	
+	public function onStageCreate():Void {
+		songVars.stage = PlayState.instance.currentStage;
+		
+		for (callback in callbacks.stageCreate) {
+			callback(songVars);
+		}
+	}
+	
+	public function onStageBuild():Void {
+		for (callback in callbacks.stageBuild) {
+			callback(songVars);
+		}
+	}
+	
+	public function onStageRefresh():Void {
+		for (callback in callbacks.stageRefresh) {
+			callback(songVars);
+		}
+	}
+	
+	public function onStageReset():Void {
+		for (callback in callbacks.stageReset) {
+			callback(songVars);
+		}
+	}
+	
+	override public function onPause(event:PauseScriptEvent):Void {
+		for (callback in callbacks.pause) {
+			callback(songVars);
+		}
+	}
+	
+	override public function onResume(event:ScriptEvent):Void {
+		for (callback in callbacks.resume) {
+			callback(event, songVars);
+		}
+	}
+	
+	override public function onNoteIncoming(event:NoteScriptEvent):Void {
+		for (callback in callbacks.noteIncoming) {
+			callback(event, songVars);
+		}
+	}
+	
+	override public function onNoteHit(event:HitNoteScriptEvent):Void {
+		for (callback in callbacks.noteHit) {
+			callback(event, songVars);
+		}
+	}
+	
+	override public function onNoteMiss(event:NoteScriptEvent):Void {
+		for (callback in callbacks.noteMiss) {
+			callback(event, songVars);
+		}
+	}
+	
+	override public function onNoteGhostMiss(event:GhostMissNoteScriptEvent):Void {
+		for (callback in callbacks.noteGhostMiss) {
+			callback(event, songVars);
+		}
+	}
+	
+	override public function onCountdownStart(event:CountdownScriptEvent):Void {
+		for (callback in callbacks.countdownStart) {
+			callback(event, songVars);
+		}
+	}
+	
+	override public function onCountdownStep(event:CountdownScriptEvent):Void {
+		for (callback in callbacks.countdownStep) {
+			callback(event, songVars);
+		}
+	}
+	
+	override public function onCountdownEnd(event:CountdownScriptEvent):Void {
+		for (callback in callbacks.countdownEnd) {
+			callback(event, songVars);
+		}
+	}
+	
+	override public function onSongLoaded(event:SongLoadScriptEvent):Void {
+		songVars.song = PlayState.instance.currentSong;
+		
+		for (callback in callbacks.songLoaded) {
+			callback(event, songVars);
+		}
+	}
+	
+	override public function onSongStart(event:ScriptEvent):Void {
+		for (callback in callbacks.songStart) {
+			callback(event, songVars);
+		}
+	}
+	
+	override public function onSongEnd(event:ScriptEvent):Void {
+		for (callback in callbacks.songEnd) {
+			callback(event, songVars);
+		}
+	}
+	
+	override public function onSongRetry(event:ScriptEvent):Void {
+		for (callback in callbacks.songRetry) {
+			callback(event, songVars);
+		}
+	}
+	
+	override public function onStepHit(event:SongTimeScriptEvent):Void {
+		for (callback in callbacks.stepHit) {
+			callback(event, songVars);
+		}
+	}
+	
+	override public function onBeatHit(event:SongTimeScriptEvent):Void {
+		for (callback in callbacks.beatHit) {
+			callback(event, songVars);
+		}
+	}
+	
+	override public function onSongEvent(event:SongEventScriptEvent):Void {
+		for (callback in callbacks.songEvent) {
+			callback(event, songVars);
+		}
+	}
+	
+	override public function onGameOver(event:ScriptEvent):Void {
+		for (callback in callbacks.gameOver) {
+			callback(event, songVars);
+		}
+	}
+	
+	override public function onUpdate(event:UpdateScriptEvent):Void {
+		for (callback in callbacks.update) {
+			callback(event, songVars);
+		}
+	}
+	
+	override public function onDestroy(event:ScriptEvent):Void {
+		for (callback in callbacks.destroy) {
+			callback(event, songVars);
+		}
+		
+		for (key in Objects.fields(callbacks)) {
+			Objects.setPath(callbacks, key, new Array());
+		}
+		
+		songVars = null;
+	}
+	
+	override public function onSubStateOpenBegin(event:SubStateScriptEvent):Void {
+		if (Std.isOfType(event.targetState, PlayState)) {
+			songVars = {};
+		}
+	}
+}
