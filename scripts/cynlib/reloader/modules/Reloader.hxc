@@ -2,6 +2,7 @@ import haxe.ds.StringMap;
 
 import flixel.FlxG;
 
+import funkin.modding.base.ScriptedMusicBeatState;
 import funkin.modding.module.ModuleHandler;
 import funkin.modding.module.ScriptedModule;
 import funkin.play.PlayState;
@@ -15,6 +16,8 @@ class CL_Reloader extends ScriptedModule {
 	public function new() {
 		super("CL_Reloader", -2147483648);
 	}
+	
+	public var targetState:String = null;
 	
 	public var reloadPre:StringMap<ReloadData> = new StringMap();
 	public var reloadPost:StringMap<ReloadData> = new StringMap();
@@ -55,6 +58,10 @@ class CL_Reloader extends ScriptedModule {
 		
 		FlxG.signals.postStateSwitch.addOnce(function():Void {
 			reload(reloadPost);
+			
+			if (targetState != null) {
+				FlxG.switchState(ScriptedMusicBeatState.init(targetState));
+			}
 		});
 	}
 }
