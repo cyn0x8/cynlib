@@ -46,6 +46,10 @@ class CL_SongManager extends ScriptedModule {
 	};
 	
 	public function onStageCreate(event:ScriptEvent):Void {
+		if (songVars == null) {
+			songVars = {};
+		}
+		
 		songVars.stage = PlayState.instance.currentStage;
 		
 		for (callback in callbacks.stageCreate) {
@@ -132,6 +136,10 @@ class CL_SongManager extends ScriptedModule {
 	}
 	
 	override public function onSongLoaded(event:SongLoadScriptEvent):Void {
+		if (songVars == null) {
+			songVars = {};
+		}
+		
 		songVars.song = PlayState.instance.currentSong;
 		
 		for (callback in callbacks.songLoaded) {
@@ -199,9 +207,11 @@ class CL_SongManager extends ScriptedModule {
 		songVars = null;
 	}
 	
-	override public function onSubStateOpenBegin(event:SubStateScriptEvent):Void {
+	override public function onStateChangeEnd(event:StateChangeScriptEvent):Void {
 		if (Std.isOfType(event.targetState, PlayState)) {
-			songVars = {};
+			if (songVars == null) {
+				songVars = {};
+			}
 		}
 	}
 }
