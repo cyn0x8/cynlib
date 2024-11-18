@@ -8,6 +8,7 @@ import funkin.Conductor;
 import funkin.audio.FunkinSound;
 import funkin.data.event.SongEventRegistry;
 import funkin.data.song.SongEventDataRaw;
+import funkin.modding.events.SongEventScriptEvent;
 import funkin.modding.module.ScriptedModule;
 import funkin.play.PlayState;
 import funkin.play.stage.Stage;
