@@ -62,7 +62,7 @@ class CL_Menu extends ScriptedModule {
 		super("CL_Menu", -2147483648);
 	}
 	
-	public function new_Menu(data:MenuData):Menu {
+	public function new_Menu(?data:MenuData):Menu {
 		if (data == null) {
 			data = {};
 		}
@@ -118,7 +118,7 @@ class CL_Menu extends ScriptedModule {
 		};
 		
 		obj.debounce = function(duration:Float):Void {
-			if (!obj.exists || duration < 0) {
+			if (duration < 0 || !obj.exists) {
 				return;
 			}
 			
@@ -137,7 +137,7 @@ class CL_Menu extends ScriptedModule {
 		};
 		
 		obj.update = function(elapsed:Float):Void {
-			if (!obj.exists || obj.frozen) {
+			if (obj.frozen || !obj.exists) {
 				return;
 			}
 			
@@ -231,29 +231,9 @@ class CL_Menu extends ScriptedModule {
 		};
 		
 		obj.destroy = function():Void {
-			obj.data = null;
-			
-			obj.container = null;
-			
-			obj.enabled = false;
-			obj.frozen = true;
-			
-			obj.selection = -1;
-			while (obj.items.length > 0) {
-				obj.items.pop().destroy();
+			if (!obj.exists) {
+				return;
 			}
-			
-			obj.sizeX = -1;
-			obj.sizeY = -1;
-			
-			obj.wrapX = false;
-			obj.wrapY = false;
-			
-			obj.onEnter = null;
-			obj.onExit = null;
-			obj.onBack = null;
-			
-			obj.onUpdate = null;
 			
 			if (obj.debounceTimer != null) {
 				obj.debounceTimer.cancel();
@@ -262,26 +242,8 @@ class CL_Menu extends ScriptedModule {
 			}
 			
 			obj.exists = false;
-			
-			alive.remove(obj);
 		};
 		
-		alive.push(obj);
-		
 		return obj;
-	}
-	
-	private var alive:Array<Menu> = new Array();
-	
-	override public function onUpdate(event:UpdateScriptEvent):Void {
-		for (menu in alive) {
-			menu.update(event.elapsed);
-		}
-	}
-	
-	override public function onDestroy(event:ScriptEvent):Void {
-		for (menu in alive) {
-			menu.destroy();
-		}
 	}
 }

@@ -20,10 +20,7 @@ typedef MenuItem = {
 	onPress:Null<()->Void>,
 	onRelease:Null<()->Void>,
 	
-	onUpdate:Null<(Float)->Void>,
-	
-	exists:Bool,
-	destroy:()->Void
+	onUpdate:Null<(Float)->Void>
 }
 
 typedef MenuItemData = {
@@ -53,12 +50,12 @@ class CL_MenuItem extends ScriptedModule {
 		active = false;
 	}
 	
-	public function new_MenuItem(data:MenuItemData):Menu {
+	public function new_MenuItem(?data:MenuItemData):Menu {
 		if (data == null) {
 			data = {};
 		}
 		
-		var obj:Dynamic = {
+		return {
 			data: data.data == null ? {} : data.data,
 			
 			menu: data.menu,
@@ -76,34 +73,7 @@ class CL_MenuItem extends ScriptedModule {
 			onPress: data.onPress == null ? function():Void {} : data.onPress,
 			onRelease: data.onRelease == null ? function():Void {} : data.onRelease,
 				
-			onUpdate: data.onUpdate == null ? function(elapsed:Float):Void {} : data.onUpdate,
-				
-			exists: true
+			onUpdate: data.onUpdate == null ? function(elapsed:Float):Void {} : data.onUpdate
 		};
-		
-		obj.destroy = function():Void {
-			obj.data = null;
-	
-			obj.parent = null;
-			obj.container = null;
-			
-			obj.autoNavigate = false;
-			
-			obj.enabled = false;
-			obj.focused = false;
-			
-			obj.onFocus = null;
-			obj.onUnfocus = null;
-			obj.onDirection = null;
-			
-			obj.onPress = null;
-			obj.onRelease = null;
-			
-			obj.onUpdate = null;
-			
-			obj.exists = false;
-		};
-		
-		return obj;
 	}
 }
