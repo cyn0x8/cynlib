@@ -1,0 +1,218 @@
+import String;
+
+import flixel.FlxG;
+import flixel.tweens.FlxTween;
+import flixel.tweens.misc.NumTween;
+
+import funkin.modding.module.ModuleHandler;
+import funkin.modding.module.ScriptedModule;
+import funkin.util.MathUtil;
+
+typedef MovingVal = {
+	cur:Float,
+	set_cur:(Float)->Float,
+	
+	target:Float,
+	set_target:(Float)->Float,
+	
+	applied:Float,
+	set_applied:(Float)->Float,
+	
+	halfLife:Float,
+	set_halfLife:(Float)->Float,
+	
+	fps:Float,
+	set_fps:(Float)->Float,
+	tick:Float,
+	
+	snap:(Float, Null<Bool>)->Float,
+	
+	tween:(Null<Float>, Float, Null<Float>, Dynamic)->Void,
+	cancelTween:()->Void,
+	activeTween:Null<NumTween>,
+	
+	locked:Bool,
+	paused:Bool,
+	
+	shake:Bool,
+	
+	update:(Float)->Void,
+	
+	exists:Bool,
+	destroy:()->Void
+}
+
+typedef MovingValData = {
+	cur:Null<Float>,
+	
+	target:Null<Float>,
+	
+	applied:Null<Float>,
+	
+	halfLife:Null<Float>,
+	
+	fps:Null<Float>,
+	
+	locked:Null<Bool>,
+	paused:Null<Bool>,
+	
+	shake:Null<Bool>
+}
+
+class CL_MovingVal extends ScriptedModule {
+	public function new() {
+		super("CL_MovingVal", -2147483648);
+	}
+	
+	public function new_MovingVal(?data:MovingValData):MovingVal {
+		if (data == null) {
+			data = {};
+		}
+		
+		var obj:Dynamic = {
+			cur: data.cur == null ? 0 : data.cur,
+			
+			halfLife: data.halfLife == null ? 1 : data.halfLife,
+			
+			fps: data.fps == null ? 1000 : data.fps,
+			tick: 0,
+			
+			locked: data.locked == null ? false : data.locked,
+			paused: data.paused == null ? false : data.paused,
+			
+			shake: data.shake == null ? false : data.shake,
+			
+			exists: true
+		};
+		
+		obj.target = data.target == null ? obj.cur : data.target;
+		obj.applied = data.applied == null ? obj.cur : data.applied;
+		
+		obj.set_cur = function(value:Float):Float {
+			if (obj.locked || value == null || !obj.exists) {
+				return obj.cur;
+			}
+			
+			return obj.cur = value;
+		};
+		
+		obj.set_target = function(value:Float):Float {
+			if (obj.locked || value == null || !obj.exists) {
+				return obj.target;
+			}
+			
+			return obj.target = value;
+		};
+		
+		obj.set_applied = function(value:Float):Float {
+			if (obj.locked || value == null || !obj.exists) {
+				return obj.applied;
+			}
+			
+			return obj.applied = value;
+		};
+		
+		obj.set_halfLife = function(value:Float):Float {
+			if (obj.locked || value == null || !obj.exists) {
+				return obj.halfLife;
+			}
+			
+			return obj.halfLife = value;
+		};
+		
+		obj.set_fps = function(value:Float):Float {
+			if (obj.locked || value == null || value <= 0 || !obj.exists) {
+				return obj.fps;
+			}
+			
+			return obj.fps = value;
+		};
+		
+		obj.snap = function(value:Float, alsoApplied:Bool = false):Float {
+			obj.set_cur(value);
+			obj.set_target(value);
+			if (alsoApplied) {
+				obj.set_applied(value);
+			}
+			
+			return obj.cur;
+		};
+		
+		obj.tween = function(?start:Float, goal:Float, duration:Float = 0, ease:Dynamic):Void {
+			if (obj.locked || goal == null || !obj.exists) {
+				return;
+			}
+			
+			if (duration <= 0) {
+				obj.cancelTween();
+				
+				obj.set_target(goal);
+				return;
+			}
+			
+			if (start == null) {
+				start = obj.target;
+			}
+			
+			if (ease == null || Std.isOfType(ease, String)) {
+				ease = ModuleHandler.getModule("CL_GenUtil").scriptCall("getEase", [ease]);
+			}
+			
+			obj.cancelTween();
+			obj.activeTween = FlxTween.num(start, goal, duration, {ease: ease}, function(v:Float):Void {
+				obj.target = v;
+			});
+		};
+		
+		obj.cancelTween = function():Void {
+			if (!obj.exists) {
+				return;
+			}
+			
+			if (obj.activeTween != null) {
+				obj.activeTween.cancel();
+				obj.activeTween.destroy();
+				obj.activeTween = null;
+			}
+		};
+		
+		obj.update = function(elapsed:Float):Void {
+			if (!obj.exists) {
+				return;
+			}
+			
+			if (obj.activeTween != null) {
+				obj.activeTween.active = !obj.paused;
+			}
+			
+			if (obj.paused) {
+				return;
+			}
+			
+			obj.cur = MathUtil.lerp(obj.target, obj.cur, MathUtil.exp2(-elapsed / obj.halfLife));
+			
+			obj.tick += elapsed;
+			if (obj.tick >= 1 / obj.fps) {
+				obj.tick %= 1 / obj.fps;
+				
+				if (obj.shake) {
+					obj.applied = FlxG.random.float(-obj.cur, obj.cur);
+				} else {
+					obj.applied = obj.cur;
+				}
+			}
+		};
+		
+		obj.destroy = function():Void {
+			if (!obj.exists) {
+				return;
+			}
+			
+			obj.cancelTween();
+			
+			obj.exists = false;
+		};
+		
+		return obj;
+	}
+}
