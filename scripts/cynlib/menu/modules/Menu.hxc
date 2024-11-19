@@ -241,9 +241,20 @@ class CL_Menu extends ScriptedModule {
 				obj.debounceTimer = null;
 			}
 			
+			toDestroy.remove(obj.destroy);
+			
 			obj.exists = false;
 		};
 		
+		toDestroy.push(obj.destroy);
+		
 		return obj;
+	}
+	
+	private var toDestroy:Array<()->Void> = new Array();
+	override public function onDestroy(event:ScriptEvent):Void {
+		while (toDestroy.length > 0) {
+			toDestroy.pop()();
+		}
 	}
 }

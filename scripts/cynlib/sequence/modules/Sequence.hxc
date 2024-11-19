@@ -10,12 +10,13 @@ typedef SequenceEvent = {
 typedef Sequence = {
 	timers:Array<FlxTimer>,
 	
-	_running:Bool,
+	running:Bool,
 	get_running:()->Bool,
 	set_running:(Bool)->Bool,
 	
 	completed:()->Bool,
 	
+	exists:Bool,
 	destroy:()->Void
 }
 
@@ -28,43 +29,57 @@ class CL_Sequence extends Module {
 		var obj:Dynamic = {
 			timers: new Array(),
 			
-			_running: true
+			running: true,
+			
+			exists: true
 		};
 		
 		obj.get_running = function():Bool {
-			return !obj.completed() && obj._running;
+			return obj.exists && obj.running && !obj.completed();
 		};
 		
 		obj.set_running = function(v:Bool):Bool {
+			if (!obj.exists) {
+				obj.running = false;
+				return false;
+			}
+			
 			for (timer in obj.timers) {
 				timer.active = v;
 			}
 			
-			return obj._running = v;
+			return obj.running = v;
 		};
 		
 		obj.completed = function():Bool {
+			if (!obj.exists) {
+				return true;
+			}
+			
 			var completed:Bool = obj.timers.length == 0;
 			if (completed) {
-				obj._running = false;
+				obj.running = false;
 			}
 			
 			return completed;
 		};
 		
 		obj.destroy = function():Void {
-			for (timer in obj.timers) {
+			if (!obj.exists) {
+				return;
+			}
+			
+			while (!obj.completed()) {
+				var timer:FlxTimer = obj.timers.pop();
 				timer.cancel();
 				timer.destroy();
 			}
 			
-			while (!obj.completed()) {
-				obj.timers.pop();
-			}
+			obj.running = false;
 			
-			obj._running = false;
+			toDestroy.remove(obj.destroy);
 			
-			alive.remove(obj);
+			obj.exists = false;
 		};
 		
 		for (event in events) {
@@ -79,16 +94,15 @@ class CL_Sequence extends Module {
 		
 		obj.set_running(start);
 		
-		alive.push(obj);
+		toDestroy.push(obj.destroy);
 		
 		return obj;
 	}
 	
-	private var alive:Array<Sequence> = new Array();
-	
+	private var toDestroy:Array<()->Void)> = new Array();
 	override public function onDestroy(event:ScriptEvent):Void {
-		for (sequence in alive) {
-			sequence.destroy();
+		while (toDestroy.length > 0) {
+			toDestroy.pop()();
 		}
 	}
 }

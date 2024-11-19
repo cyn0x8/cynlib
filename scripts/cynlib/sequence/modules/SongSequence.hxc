@@ -13,7 +13,7 @@ typedef SongSequence = {
 	
 	startTime:Float,
 	
-	_running:Bool,
+	running:Bool,
 	get_running:()->Bool,
 	set_running:(Bool)->Bool,
 	
@@ -21,6 +21,7 @@ typedef SongSequence = {
 	
 	update:()->Void,
 	
+	exists:Bool,
 	destroy:()->Void
 }
 
@@ -35,32 +36,43 @@ class CL_SongSequence extends Module {
 			
 			startTime: Conductor.get_instance().songPosition,
 			
-			_running: true
+			running: true,
+			
+			exists: true
 		};
 		
 		obj.get_running = function():Bool {
-			return !obj.completed() && obj._running;
+			return obj.exists && !obj.completed() && obj.running;
 		};
 		
 		obj.set_running = function(v:Bool):Bool {
-			if (v != obj._running) {
+			if (!obj.exists) {
+				obj.running = false;
+				return false;
+			}
+			
+			if (v != obj.running) {
 				obj.startTime = Conductor.get_instance().songPosition - obj.startTime; // it works trust me
 			}
 			
-			return obj._running = v;
+			return obj.running = v;
 		};
 		
 		obj.completed = function():Bool {
+			if (!obj.exists) {
+				return true;
+			}
+			
 			var completed:Bool = obj.timers.length == 0;
 			if (completed) {
-				obj._running = false;
+				obj.running = false;
 			}
 			
 			return completed;
 		};
 		
 		obj.update = function(elapsed:Float):Void {
-			if (!obj.get_running()) {
+			if (!obj.exists || !obj.get_running()) {
 				return;
 			}
 			
@@ -79,13 +91,19 @@ class CL_SongSequence extends Module {
 		};
 		
 		obj.destroy = function():Void {
+			if (!obj.exists) {
+				return;
+			}
+			
 			while (!obj.completed()) {
 				obj.timers.pop();
 			}
 			
-			obj._running = false;
+			obj.running = false;
 			
 			alive.remove(obj);
+			
+			toDestroy.remove(obj.destroy);
 		};
 		
 		for (event in events) {
@@ -96,19 +114,23 @@ class CL_SongSequence extends Module {
 		obj.set_running(start);
 		
 		alive.push(obj);
+		
+		toDestroy.push(obj.destroy);
+		
+		return obj;
 	}
 	
 	private var alive:Array<SongSequence> = new Array();
-	
 	override public function onUpdate(event:UpdateScriptEvent):Void {
 		for (obj in alive) {
 			obj.update(event.elapsed);
 		}
 	}
 	
+	private var toDestroy:Array<()->Void> = new Array();
 	override public function onDestroy(event:ScriptEvent):Void {
-		for (obj in alive) {
-			obj.destroy();
+		while (toDestroy.length > 0) {
+			toDestroy.pop()();
 		}
 	}
 }
