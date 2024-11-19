@@ -1,0 +1,515 @@
+import flixel.FlxCamera;
+
+import funkin.modding.module.ModuleHandler;
+import funkin.modding.module.ScriptedModule;
+
+typedef Neocam = {
+	parent:FlxCamera,
+	
+	enabled:Bool,
+	paused:Bool,
+	debugMode:Bool,
+	
+	gameCamera:Bool,
+	
+	position:MovingPoint,
+	positionShake:MovingPoint,
+	
+	offset:MovingPoint,
+	offsetShake:MovingPoint,
+	
+	zoom:MovingVal,
+	zoomShake:MovingVal,
+	
+	rotation:Null<MovingVal>,
+	rotationShake:Null<MovingVal>,
+	
+	alpha:MovingVal,
+	
+	noteOffsetScale:Float,
+	noteOffset:MovingPoint,
+	
+	targets:StringMap<()->Void>,
+	
+	bump:(Float)->Void,
+	bumpPattern:IntMap<Float>,
+	bumpPatternStart:Int,
+	bumpPatternLength:Int,
+	setBumpPattern:(IntMap<Float>, Int)->Void,
+	
+	onNoteHit:(HitNoteScriptEvent)->Void,
+	onNoteMiss:()->Void,
+	
+	onStepHit:(SongTimeScriptEvent)->Void,
+	
+	onSongEvent:(SongEventScriptEvent)->Void,
+	
+	onUpdate:(Float)->Void,
+	
+	exists:Bool,
+	destroy:()->Void
+}
+
+typedef MovingVal = Dynamic;
+typedef MovingPoint = {
+	x:MovingVal,
+	y:MovingVal
+}
+
+typedef NeocamData = {
+	parent:FlxCamera,
+	
+	gameCamera:Bool
+}
+
+class CL_Neocam extends ScriptedModule {
+	public function new() {
+		super("CL_Neocam", -2147483648);
+	}
+	
+	public function new_Neocam(?data:NeocamData, rotationEnabled:Bool = false):Neocam {
+		if (data == null) {
+			data = {};
+		}
+		
+		var obj:Dynamic = {
+			parent: data.parent,
+			
+			enabled: true,
+			paused: false,
+			debugMode: false,
+			
+			gameCamera: data.gameCamera == null ? false : data.gameCamera,
+			
+			position: {
+				x: ModuleHandler.getModule("CL_MovingVal").scriptCall("new_MovingVal"),
+				y: ModuleHandler.getModule("CL_MovingVal").scriptCall("new_MovingVal")
+			},
+			
+			positionShake: {
+				x: ModuleHandler.getModule("CL_MovingVal").scriptCall("new_MovingVal", {shake: true}),
+				y: ModuleHandler.getModule("CL_MovingVal").scriptCall("new_MovingVal", {shake: true})
+			},
+			
+			offset: {
+				x: ModuleHandler.getModule("CL_MovingVal").scriptCall("new_MovingVal"),
+				y: ModuleHandler.getModule("CL_MovingVal").scriptCall("new_MovingVal")
+			},
+			
+			offsetShake: {
+				x: ModuleHandler.getModule("CL_MovingVal").scriptCall("new_MovingVal", {shake: true}),
+				y: ModuleHandler.getModule("CL_MovingVal").scriptCall("new_MovingVal", {shake: true})
+			},
+			
+			zoom: ModuleHandler.getModule("CL_MovingVal").scriptCall("new_MovingVal"),
+			zoomShake: ModuleHandler.getModule("CL_MovingVal").scriptCall("new_MovingVal", {shake: true}),
+			
+			rotation: rotationEnabled != true ? null : ModuleHandler.getModule("CL_MovingVal").scriptCall("new_MovingVal"),
+			rotationShake: rotationEnabled != true ? null : ModuleHandler.getModule("CL_MovingVal").scriptCall("new_MovingVal", {shake: true}),
+			
+			alpha: ModuleHandler.getModule("CL_MovingVal").scriptCall("new_MovingVal"),
+			
+			noteOffsetScale: 0,
+			noteOffset: {
+				x: ModuleHandler.getModule("CL_MovingVal").scriptCall("new_MovingVal"),
+				y: ModuleHandler.getModule("CL_MovingVal").scriptCall("new_MovingVal")
+			},
+			
+			targets: new StringMap(),
+			
+			bumpPattern: new IntMap(),
+			bumpPatternStart: 0,
+			bumpPatternLength: 0,
+			
+			exists: true
+		};
+		
+		obj.bump = function(amount:Float):Void {
+			if (!obj.exists) {
+				return;
+			}
+			
+			obj.zoom.setCur(obj.zoom.cur + amount);
+		};
+		
+		obj.setBumpPattern = function(pattern:IntMap<Float>, length:Int = 0):Void {
+			if (!obj.exists) {
+				return;
+			}
+			
+			obj.bumpPattern = pattern;
+			
+			var lastStep:Int = length;
+			for (step in pattern.keys()) {
+				lastStep = Math.max(lastStep, step);
+			}
+			
+			obj.bumpPatternLength = lastStep;
+		};
+		
+		obj.onNoteHit = function(event:HitNoteScriptEvent):Void {
+			if (!obj.exists) {
+				return;
+			}
+			
+			if (noteOffsetScale == 0) {
+				obj.onNoteMiss();
+				return;
+			}
+			
+			var x:Float = 0;
+			var y:Float = 0;
+			switch (event.note.direction) {
+				case 0: {x = -noteOffsetScale;}
+				case 1: {y = noteOffsetScale;}
+				case 2: {y = -noteOffsetScale;}
+				case 3: {x = noteOffsetScale;}
+			}
+			
+			obj.noteOffset.x.setTarget(x);
+			obj.noteOffset.y.setTarget(y);
+		};
+		
+		obj.onNoteMiss = function():Void {
+			if (!obj.exists) {
+				return;
+			}
+			
+			obj.noteOffset.x.setTarget(0);
+			obj.noteOffset.y.setTarget(0);
+		};
+		
+		obj.onStepHit = function(event:SongTimeScriptEvent):Void {
+			if (!obj.exists) {
+				return;
+			}
+			
+			obj.bump(obj.bumpPattern.get((event.step - obj.bumpPatternStart) % obj.bumpPatternLength));
+		};
+		
+		obj.onSongEvent = function(event:SongEventScriptEvent):Void {
+			if (!obj.exists) {
+				return;
+			}
+			
+			var eventData:SongEventDataRaw = event.eventData;
+			switch (eventData.eventKind) {
+				case "FocusCamera": {
+					if (obj.gameCamera) {
+						var x:Null<Float> = ModuleHandler.getModule("CL_SongUtil").scriptCall("eventGetFloat", [eventData, "x"]);
+						if (x == null) {
+							x = 0;
+						}
+						
+						x -= 640;
+						
+						var y:Null<Float> = ModuleHandler.getModule("CL_SongUtil").scriptCall("eventGetFloat", [eventData, "y"]);
+						if (y == null) {
+							y = 0;
+						}
+						
+						y -= 360;
+						
+						if (PlayState.instance != null) {
+							var stage:Stage = PlayState.instance.currentStage;
+							
+							var charID:Null<Int> = ModuleHandler.getModule("CL_SongUtil").scriptCall("eventGetInt", [eventData, "char"]);
+							switch (charID) {
+								case 0: {
+									if (stage.getBoyfriend() != null) {
+										var point:FlxPoint = stage.getBoyfriend().cameraFocusPoint;
+										x += point.x;
+										y += point.y;
+									}
+								}
+								
+								case 1: {
+									if (stage.getDad() != null) {
+										var point:FlxPoint = stage.getDad().cameraFocusPoint;
+										x += point.x;
+										y += point.y;
+									}
+								}
+								
+								case 2: {
+									if (stage.getGirlfriend() != null) {
+										var point:FlxPoint = stage.getGirlfriend().cameraFocusPoint;
+										x += point.x;
+										y += point.y;
+									}
+								}
+							}
+						}
+						
+						var duration:Null<Float> = ModuleHandler.getModule("CL_SongUtil").scriptCall("eventGetFloat", [eventData, "duration"]);
+						if (duration == null) {
+							duration = 0;
+						}
+						
+						if (Conductor.instance != null) {
+							duration = Conductor.instance.stepLengthMs * duration / 1000;
+						}
+						
+						var ease:Null<String> = ModuleHandler.getModule("CL_SongUtil").scriptCall("eventGetString", [eventData, "ease"]);
+						switch (ease) {
+							case "CLASSIC": {
+								obj.position.x.setTarget(x);
+								obj.position.y.setTarget(y);
+							}
+							
+							case "INSTANT": {
+								obj.position.x.snap(x, false);
+								obj.position.y.snap(y, false);
+							}
+							
+							default: {
+								obj.position.x.tween(null, x, duration, ease);
+								obj.position.y.tween(null, y, duration, ease);
+							}
+						}
+					}
+				}
+				
+				case "SetCameraBop": {
+					if (PlayState.instance != null) {
+						var rate:Null<Int> = ModuleHandler.getModule("CL_SongUtil").scriptCall("eventGetInt", [eventData, "rate"]);
+						if (rate == null) {
+							rate = Constants.DEFAULT_ZOOM_RATE;
+						}
+						
+						var intensity:Null<Float> = ModuleHandler.getModule("CL_SongUtil").scriptCall("eventGetFloat", [eventData, "intensity"]);
+						if (intensity == null) {
+							intensity = 1.0;
+						}
+						
+						if (_game) {
+							intensity = (Constants.DEFAULT_BOP_INTENSITY - 1.0) * intensity;
+						} else {
+							intensity = (Constants.DEFAULT_BOP_INTENSITY - 1.0) * intensity * 2;
+						}
+						
+						var bumpPattern:IntMap<Float> = new IntMap();
+						bumpPattern.set(0, intensity);
+						obj.setBumpPattern(bumpPattern, rate * 4);
+					}
+				}
+				
+				case "ZoomCamera": {
+					if (obj.gameCamera) {
+						if (
+							PlayState.instance != null &&
+							PlayState.instance.currentStage != null &&
+							!PlayState.instance.isMinimalMode
+						) {
+							var zoom:Null<Float> = ModuleHandler.getModule("CL_SongUtil").scriptCall("eventGetFloat", [eventData, "zoom"]);
+							if (zoom == null) {
+								zoom = 1;
+							}
+							
+							var duration:Null<Float> = ModuleHandler.getModule("CL_SongUtil").scriptCall("eventGetFloat", [eventData, "duration"]);
+							if (duration == null) {
+								duration = 4;
+							}
+							
+							var mode:Null<String> = ModuleHandler.getModule("CL_SongUtil").scriptCall("eventGetString", [eventData, "mode"]);
+							if (mode == null) {
+								mode = "direct";
+							}
+							
+							var ease:Null<String> = ModuleHandler.getModule("CL_SongUtil").scriptCall("eventGetString", [eventData, "ease"]);
+							if (ease == null) {
+								ease = "linear";
+							}
+							
+							var eventZoom:Float = zoom * (mode == "direct" ? FlxCamera.defaultZoom : PlayState.instance.stageZoom);
+							switch (ease) {
+								case "INSTANT": {
+									obj.zoom.tween(null, eventZoom, 0, "linear");
+								}
+								
+								default: {
+									var eventDuration:Float = Conductor.instance.stepLengthMs * duration / 1000;
+									obj.zoom.tween(null, eventZoom, eventDuration, ease);
+								}
+							}
+						}
+					}
+				}
+			}
+		};
+		
+		obj.onUpdate = function(elapsed:Float):Void {
+			if (!obj.exists || obj.parent == null) {
+				return;
+			}
+			
+			obj.position.x.update(elapsed);
+			obj.position.y.update(elapsed);
+			obj.positionShake.x.update(elapsed);
+			obj.positionShake.y.update(elapsed);
+			
+			obj.offset.x.update(elapsed);
+			obj.offset.y.update(elapsed);
+			obj.offsetShake.x.update(elapsed);
+			obj.offsetShake.y.update(elapsed);
+			
+			obj.zoom.update(elapsed);
+			obj.zoomShake.update(elapsed);
+			
+			if (obj.rotation != null) {
+				obj.rotation.update(elapsed);
+				obj.rotationShake.update(elapsed);
+			}
+			
+			obj.alpha.update(elapsed);
+			
+			obj.noteOffset.x.update(elapsed);
+			obj.noteOffset.y.update(elapsed);
+			
+			if (obj.debugMode) {
+				obj.parent.scroll.x = -FlxG.mouse.getScreenPosition().x * 2;
+				obj.parent.scroll.y = -FlxG.mouse.getScreenPosition().y * 2;
+			} else {
+				obj.parent.scroll.x = obj.position.x.applied + obj.positionShake.x.applied;
+				obj.parent.scroll.y = obj.position.y.applied + obj.positionShake.y.applied;
+			}
+			
+			obj.parent.scroll.x += obj.offset.x.applied + obj.offsetShake.x.applied + obj.noteOffset.x.applied;
+			obj.parent.scroll.y += obj.offset.y.applied + obj.offsetShake.y.applied + obj.noteOffset.y.applied;
+			
+			obj.parent.zoom = obj.zoom.applied + obj.zoomShake.applied;
+			
+			if (obj.rotation != null) {
+				// todo
+			}
+			
+			obj.parent.alpha = obj.alpha.applied;
+			
+			if (PlayState.instance != null) {
+				if (obj.gameCamera) {
+					PlayState.instance.cameraFollowPoint.x = obj.parent.scroll.x;
+					PlayState.instance.cameraFollowPoint.y = obj.parent.scroll.y;
+					PlayState.instance.currentCameraZoom = obj.parent.zoom;
+				}
+				
+				PlayState.instance.cancelAllCameraTweens();
+				
+				FlxTween.globalManager.cancelTweensOf(obj.parent);
+				FlxTween.globalManager.cancelTweensOf(obj.parent.scroll);
+				obj.parent.followLerp = 0;
+				obj.parent.target = null;
+				
+				var paused:Bool = PlayState.instance.get_isGamePaused() || obj.paused;
+				
+				obj.position.x.paused = paused;
+				obj.position.y.paused = paused;
+				obj.positionShake.x.paused = paused;
+				obj.positionShake.y.paused = paused;
+				
+				obj.offset.x.paused = paused;
+				obj.offset.y.paused = paused;
+				obj.offsetShake.x.paused = paused;
+				obj.offsetShake.y.paused = paused;
+				
+				obj.zoom.paused = paused;
+				obj.zoomShake.paused = paused;
+				
+				if (obj.rotation != null) {
+					obj.rotation.paused = paused;
+					obj.rotationShake.paused = paused;
+				}
+				
+				obj.alpha.paused = paused;
+				
+				obj.noteOffset.x.paused = paused;
+				obj.noteOffset.y.paused = paused;
+			}
+		};
+		
+		obj.destroy = function():Void {
+			if (!obj.exists) {
+				return;
+			}
+			
+			obj.position.x.destroy();
+			obj.position.y.destroy();
+			obj.positionShake.x.destroy();
+			obj.positionShake.y.destroy();
+			
+			obj.offset.x.destroy();
+			obj.offset.y.destroy();
+			obj.offsetShake.x.destroy();
+			obj.offsetShake.y.destroy();
+			
+			obj.zoom.destroy();
+			obj.zoomShake.destroy();
+			
+			if (obj.rotation != null) {
+				obj.rotation.destroy();
+				obj.rotationShake.destroy();
+			}
+			
+			obj.alpha.destroy();
+			
+			obj.noteOffset.x.destroy();
+			obj.noteOffset.y.destroy();
+			
+			FlxG.signals.postUpdate.remove(obj.onUpdate);
+			
+			alive.remove(obj);
+			
+			toDestroy.remove(obj.destroy);
+			
+			exists = false;
+		};
+		
+		if (!FlxG.signals.postUpdate.has(obj.onUpdate)) {
+			FlxG.signals.postUpdate.add(obj.onUpdate);
+		}
+		
+		alive.push(obj);
+		
+		toDestroy.push(obj.destroy);
+		
+		return obj;
+	}
+	
+	private var alive:Array<Neocam> = new Array();
+	
+	override public function onNoteHit(event:HitNoteScriptEvent):Void {
+		for (obj in alive) {
+			obj.onNoteHit(event);
+		}
+	}
+	
+	override public function onNoteMiss(event:NoteScriptEvent):Void {
+		for (obj in alive) {
+			obj.onNoteMiss();
+		}
+	}
+	
+	override public function onNoteGhostMiss(event:GhostMissNoteScriptEvent):Void {
+		for (obj in alive) {
+			obj.onNoteMiss();
+		}
+	}
+	
+	override public function onStepHit(event:SongTimeScriptEvent):Void {
+		for (obj in alive) {
+			obj.onStepHit(event);
+		}
+	}
+	
+	override public function onSongEvent(event:SongEventScriptEvent):Void {
+		for (obj in alive) {
+			obj.onSongEvent(event);
+		}
+	}
+	
+	private var toDestroy:Array<()->Void> = new Array();
+	override public function onDestroy(event:ScriptEvent):Void {
+		while (toDestroy.length > 0) {
+			toDestroy.pop()();
+		}
+	}
+}
