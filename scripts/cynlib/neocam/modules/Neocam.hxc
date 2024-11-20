@@ -29,9 +29,6 @@ typedef Neocam = {
 	zoom:Dynamic,
 	zoomShake:Dynamic,
 	
-	rotation:Null<Dynamic>,
-	rotationShake:Null<Dynamic>,
-	
 	alpha:Dynamic,
 	
 	noteOffsetScale:Float,
@@ -71,7 +68,7 @@ class CL_Neocam extends ScriptedModule {
 		super("CL_Neocam", -2147483648);
 	}
 	
-	public function new_Neocam(?data:NeocamData, rotationEnabled:Bool = false):Neocam {
+	public function new_Neocam(?data:NeocamData):Neocam {
 		if (data == null) {
 			data = {};
 		}
@@ -107,9 +104,6 @@ class CL_Neocam extends ScriptedModule {
 			
 			zoom: ModuleHandler.getModule("CL_MovingVal").scriptCall("new_MovingVal", [{cur: 1}]),
 			zoomShake: ModuleHandler.getModule("CL_MovingVal").scriptCall("new_MovingVal", [{shake: true}]),
-			
-			rotation: rotationEnabled != true ? null : ModuleHandler.getModule("CL_MovingVal").scriptCall("new_MovingVal"),
-			rotationShake: rotationEnabled != true ? null : ModuleHandler.getModule("CL_MovingVal").scriptCall("new_MovingVal", [{shake: true}]),
 			
 			alpha: ModuleHandler.getModule("CL_MovingVal").scriptCall("new_MovingVal", [{cur: 1}]),
 			
@@ -362,11 +356,6 @@ class CL_Neocam extends ScriptedModule {
 			obj.zoom.update(elapsed);
 			obj.zoomShake.update(elapsed);
 			
-			if (obj.rotation != null) {
-				obj.rotation.update(elapsed);
-				obj.rotationShake.update(elapsed);
-			}
-			
 			obj.alpha.update(elapsed);
 			
 			obj.noteOffset.x.update(elapsed);
@@ -384,10 +373,6 @@ class CL_Neocam extends ScriptedModule {
 			obj.parent.scroll.y += obj.offset.y.applied + obj.offsetShake.y.applied + obj.noteOffset.y.applied;
 			
 			obj.parent.zoom = obj.zoom.applied + obj.zoomShake.applied;
-			
-			if (obj.rotation != null) {
-				// todo
-			}
 			
 			obj.parent.alpha = obj.alpha.applied;
 			
@@ -420,11 +405,6 @@ class CL_Neocam extends ScriptedModule {
 				obj.zoom.paused = paused;
 				obj.zoomShake.paused = paused;
 				
-				if (obj.rotation != null) {
-					obj.rotation.paused = paused;
-					obj.rotationShake.paused = paused;
-				}
-				
 				obj.alpha.paused = paused;
 				
 				obj.noteOffset.x.paused = paused;
@@ -449,11 +429,6 @@ class CL_Neocam extends ScriptedModule {
 			
 			obj.zoom.destroy();
 			obj.zoomShake.destroy();
-			
-			if (obj.rotation != null) {
-				obj.rotation.destroy();
-				obj.rotationShake.destroy();
-			}
 			
 			obj.alpha.destroy();
 			
