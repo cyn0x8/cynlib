@@ -10,6 +10,8 @@ class CL_SongManager extends ScriptedModule {
 	
 	public var songVars:Null<SongVars> = null;
 	public var callbacks:Dynamic = {
+		playStateCreate: new Array(),
+		
 		stageCreate: new Array(),
 		stageBuild: new Array(),
 		stageRefresh: new Array(),
@@ -44,6 +46,12 @@ class CL_SongManager extends ScriptedModule {
 		
 		destroy: new Array()
 	};
+	
+	public function onPlayStateCreate(event:StateChangeScriptEvent):Void {
+		for (callback in callbacks.playStateCreate) {
+			callback(event, songVars);
+		}
+	}
 	
 	public function onStageCreate(event:ScriptEvent):Void {
 		if (songVars == null) {
@@ -201,7 +209,11 @@ class CL_SongManager extends ScriptedModule {
 		}
 		
 		for (key in Objects.fields(callbacks)) {
-			Objects.setPath(callbacks, key, new Array());
+			if (key == "playStateCreate") {
+				continue;
+			}
+			
+			Objects.getPath(callbacks, key).resize(0);
 		}
 		
 		songVars = null;
@@ -212,6 +224,8 @@ class CL_SongManager extends ScriptedModule {
 			if (songVars == null) {
 				songVars = {};
 			}
+			
+			onPlayStateCreate(event, songVars);
 		}
 	}
 }
