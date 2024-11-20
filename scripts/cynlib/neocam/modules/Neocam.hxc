@@ -1,7 +1,15 @@
-import flixel.FlxCamera;
+import haxe.ds.IntMap;
+import haxe.ds.StringMap;
 
+import flixel.FlxG;
+import flixel.FlxCamera;
+import flixel.tweens.FlxTween;
+
+import funkin.Conductor;
 import funkin.modding.module.ModuleHandler;
 import funkin.modding.module.ScriptedModule;
+import funkin.play.PlayState;
+import funkin.util.Constants;
 
 typedef Neocam = {
 	parent:FlxCamera,
@@ -12,22 +20,22 @@ typedef Neocam = {
 	
 	gameCamera:Bool,
 	
-	position:MovingPoint,
-	positionShake:MovingPoint,
+	position:Dynamic,
+	positionShake:Dynamic,
 	
-	offset:MovingPoint,
-	offsetShake:MovingPoint,
+	offset:Dynamic,
+	offsetShake:Dynamic,
 	
-	zoom:MovingVal,
-	zoomShake:MovingVal,
+	zoom:Dynamic,
+	zoomShake:Dynamic,
 	
-	rotation:Null<MovingVal>,
-	rotationShake:Null<MovingVal>,
+	rotation:Null<Dynamic>,
+	rotationShake:Null<Dynamic>,
 	
-	alpha:MovingVal,
+	alpha:Dynamic,
 	
 	noteOffsetScale:Float,
-	noteOffset:MovingPoint,
+	noteOffset:Dynamic,
 	
 	targets:StringMap<()->Void>,
 	
@@ -50,16 +58,12 @@ typedef Neocam = {
 	destroy:()->Void
 }
 
-typedef MovingVal = Dynamic;
-typedef MovingPoint = {
-	x:MovingVal,
-	y:MovingVal
-}
-
 typedef NeocamData = {
 	parent:FlxCamera,
 	
-	gameCamera:Bool
+	gameCamera:Bool,
+	
+	noteOffsetScale:Float
 }
 
 class CL_Neocam extends ScriptedModule {
@@ -87,8 +91,8 @@ class CL_Neocam extends ScriptedModule {
 			},
 			
 			positionShake: {
-				x: ModuleHandler.getModule("CL_MovingVal").scriptCall("new_MovingVal", {shake: true}),
-				y: ModuleHandler.getModule("CL_MovingVal").scriptCall("new_MovingVal", {shake: true})
+				x: ModuleHandler.getModule("CL_MovingVal").scriptCall("new_MovingVal", [{shake: true}]),
+				y: ModuleHandler.getModule("CL_MovingVal").scriptCall("new_MovingVal", [{shake: true}])
 			},
 			
 			offset: {
@@ -97,19 +101,19 @@ class CL_Neocam extends ScriptedModule {
 			},
 			
 			offsetShake: {
-				x: ModuleHandler.getModule("CL_MovingVal").scriptCall("new_MovingVal", {shake: true}),
-				y: ModuleHandler.getModule("CL_MovingVal").scriptCall("new_MovingVal", {shake: true})
+				x: ModuleHandler.getModule("CL_MovingVal").scriptCall("new_MovingVal", [{shake: true}]),
+				y: ModuleHandler.getModule("CL_MovingVal").scriptCall("new_MovingVal", [{shake: true}])
 			},
 			
-			zoom: ModuleHandler.getModule("CL_MovingVal").scriptCall("new_MovingVal"),
-			zoomShake: ModuleHandler.getModule("CL_MovingVal").scriptCall("new_MovingVal", {shake: true}),
+			zoom: ModuleHandler.getModule("CL_MovingVal").scriptCall("new_MovingVal", [{cur: 1}]),
+			zoomShake: ModuleHandler.getModule("CL_MovingVal").scriptCall("new_MovingVal", [{shake: true}]),
 			
 			rotation: rotationEnabled != true ? null : ModuleHandler.getModule("CL_MovingVal").scriptCall("new_MovingVal"),
-			rotationShake: rotationEnabled != true ? null : ModuleHandler.getModule("CL_MovingVal").scriptCall("new_MovingVal", {shake: true}),
+			rotationShake: rotationEnabled != true ? null : ModuleHandler.getModule("CL_MovingVal").scriptCall("new_MovingVal", [{shake: true}]),
 			
-			alpha: ModuleHandler.getModule("CL_MovingVal").scriptCall("new_MovingVal"),
+			alpha: ModuleHandler.getModule("CL_MovingVal").scriptCall("new_MovingVal", [{cur: 1}]),
 			
-			noteOffsetScale: 0,
+			noteOffsetScale: data.noteOffsetScale == null ? 0 : data.noteOffsetScale,
 			noteOffset: {
 				x: ModuleHandler.getModule("CL_MovingVal").scriptCall("new_MovingVal"),
 				y: ModuleHandler.getModule("CL_MovingVal").scriptCall("new_MovingVal")
@@ -129,7 +133,7 @@ class CL_Neocam extends ScriptedModule {
 				return;
 			}
 			
-			obj.zoom.setCur(obj.zoom.cur + amount);
+			obj.zoom.set_cur(obj.zoom.cur + amount);
 		};
 		
 		obj.setBumpPattern = function(pattern:IntMap<Float>, length:Int = 0):Void {
@@ -152,7 +156,7 @@ class CL_Neocam extends ScriptedModule {
 				return;
 			}
 			
-			if (noteOffsetScale == 0) {
+			if (obj.noteOffsetScale == 0) {
 				obj.onNoteMiss();
 				return;
 			}
@@ -160,14 +164,14 @@ class CL_Neocam extends ScriptedModule {
 			var x:Float = 0;
 			var y:Float = 0;
 			switch (event.note.direction) {
-				case 0: {x = -noteOffsetScale;}
-				case 1: {y = noteOffsetScale;}
-				case 2: {y = -noteOffsetScale;}
-				case 3: {x = noteOffsetScale;}
+				case 0: {x = -obj.noteOffsetScale;}
+				case 1: {y = obj.noteOffsetScale;}
+				case 2: {y = -obj.noteOffsetScale;}
+				case 3: {x = obj.noteOffsetScale;}
 			}
 			
-			obj.noteOffset.x.setTarget(x);
-			obj.noteOffset.y.setTarget(y);
+			obj.noteOffset.x.set_target(x);
+			obj.noteOffset.y.set_target(y);
 		};
 		
 		obj.onNoteMiss = function():Void {
@@ -175,8 +179,8 @@ class CL_Neocam extends ScriptedModule {
 				return;
 			}
 			
-			obj.noteOffset.x.setTarget(0);
-			obj.noteOffset.y.setTarget(0);
+			obj.noteOffset.x.set_target(0);
+			obj.noteOffset.y.set_target(0);
 		};
 		
 		obj.onStepHit = function(event:SongTimeScriptEvent):Void {
@@ -253,8 +257,8 @@ class CL_Neocam extends ScriptedModule {
 						var ease:Null<String> = ModuleHandler.getModule("CL_SongUtil").scriptCall("eventGetString", [eventData, "ease"]);
 						switch (ease) {
 							case "CLASSIC": {
-								obj.position.x.setTarget(x);
-								obj.position.y.setTarget(y);
+								obj.position.x.set_target(x);
+								obj.position.y.set_target(y);
 							}
 							
 							case "INSTANT": {
@@ -282,7 +286,7 @@ class CL_Neocam extends ScriptedModule {
 							intensity = 1.0;
 						}
 						
-						if (_game) {
+						if (obj.gameCamera) {
 							intensity = (Constants.DEFAULT_BOP_INTENSITY - 1.0) * intensity;
 						} else {
 							intensity = (Constants.DEFAULT_BOP_INTENSITY - 1.0) * intensity * 2;
@@ -338,10 +342,12 @@ class CL_Neocam extends ScriptedModule {
 			}
 		};
 		
-		obj.onUpdate = function(elapsed:Float):Void {
+		obj.onUpdate = function():Void {
 			if (!obj.exists || obj.parent == null) {
 				return;
 			}
+			
+			var elapsed:Float = FlxG.elapsed;
 			
 			obj.position.x.update(elapsed);
 			obj.position.y.update(elapsed);

@@ -99,7 +99,7 @@ class CL_Sequence extends Module {
 		return obj;
 	}
 	
-	private var toDestroy:Array<()->Void)> = new Array();
+	private var toDestroy:Array<()->Void> = new Array();
 	override public function onDestroy(event:ScriptEvent):Void {
 		while (toDestroy.length > 0) {
 			toDestroy.pop()();

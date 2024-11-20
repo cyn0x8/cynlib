@@ -29,7 +29,7 @@ class CL_SongUtil extends ScriptedModule {
 		}
 		
 		var stage:Stage = PlayState.instance.currentStage;
-		if (stage == null) {
+		if (stage == null || stage.getDad() == null || stage.getBoyfriend() == null) {
 			return;
 		}
 		
