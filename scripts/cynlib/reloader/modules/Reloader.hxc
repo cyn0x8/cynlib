@@ -25,6 +25,8 @@ class CL_Reloader extends ScriptedModule {
 	private var reload:(StringMap<ReloadData>)->Void = function(reloadData:StringMap<ReloadData>):Void {
 		reloadData = reloadData.copy();
 		for (module in reloadData.keys()) {
+			trace("cynlib: reloading module \"" + module + "\"");
+			
 			var data:ReloadData = reloadData.get(module);
 			if (data.variables != null) {
 				var variables:StringMap = data.variables();
@@ -54,12 +56,18 @@ class CL_Reloader extends ScriptedModule {
 		
 		FlxG.signals.preStateSwitch.addOnce(function():Void {
 			reload(reloadPre);
+			
+			trace("cynlib: pre switch reload complete");
 		});
 		
 		FlxG.signals.postStateSwitch.addOnce(function():Void {
 			reload(reloadPost);
 			
+			trace("cynlib: post switch reload complete");
+			
 			if (targetState != null) {
+				trace("cynlib: switching to target state \"" + targetState + "\"");
+				
 				FlxG.switchState(ScriptedMusicBeatState.init(targetState));
 			}
 		});
