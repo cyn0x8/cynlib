@@ -91,7 +91,7 @@ class CL_Menu extends ScriptedModule {
 			
 			onUpdate: data.onUpdate == null ? function(elapsed:Float):Void {} : data.onUpdate,
 			
-			enabled: false
+			exists: true
 		};
 		
 		if (data.autoEnable == null) {
@@ -163,81 +163,83 @@ class CL_Menu extends ScriptedModule {
 				return;
 			}
 			
-			if (obj.enabled && obj.items.length > 0) {
+			if (obj.enabled) {
 				var controls:Controls = PlayerSettings.player1.controls;
 				if (controls != null) {
 					if (controls.BACK) {
 						obj.onBack();
-					} else if (controls.check("accept", 2)) { // JUST_PRESSED
-						obj.items[obj.selection].onPress();
-					} else if (controls.check("accept", -1)) { // JUST_RELEASED
-						obj.items[obj.selection].onRelease();
-					} else {
-						obj.prevSelection = obj.selection;
-						var prevItem:Dynamic = obj.items[obj.prevSelection];
-						
-						var directions:Array<Bool> = [
-							controls.UI_LEFT_P,
-							controls.UI_DOWN_P,
-							controls.UI_UP_P,
-							controls.UI_RIGHT_P
-						];
-						
-						if (prevItem.autoNavigate) {
-							if (obj.sizeX > 1) {
-								if (directions[0]) {
-									obj.selection -= 1;
+					} else if (obj.items.length > 0) {
+						if (controls.check("accept", 2)) { // JUST_PRESSED
+							obj.items[obj.selection].onPress();
+						} else if (controls.check("accept", -1)) { // JUST_RELEASED
+							obj.items[obj.selection].onRelease();
+						} else {
+							obj.prevSelection = obj.selection;
+							var prevItem:Dynamic = obj.items[obj.prevSelection];
+							
+							var directions:Array<Bool> = [
+								controls.UI_LEFT_P,
+								controls.UI_DOWN_P,
+								controls.UI_UP_P,
+								controls.UI_RIGHT_P
+							];
+							
+							if (prevItem.autoNavigate) {
+								if (obj.sizeX > 1) {
+									if (directions[0]) {
+										obj.selection -= 1;
+									}
+									
+									if (directions[3]) {
+										obj.selection += 1;
+									}
+									
+									var row:Int = Std.int(Math.floor(obj.prevSelection / obj.sizeX)) * obj.sizeX;
+									if (obj.wrapX) {
+										obj.selection = row + obj.selection % obj.sizeX;
+									} else {
+										obj.selection = Std.int(Math.min(Math.max(obj.selection, row), row + obj.sizeX - 1));
+									}
 								}
 								
-								if (directions[3]) {
-									obj.selection += 1;
-								}
-								
-								var row:Int = Std.int(Math.floor(obj.prevSelection / obj.sizeX)) * obj.sizeX;
-								if (obj.wrapX) {
-									obj.selection = row + obj.selection % obj.sizeX;
-								} else {
-									obj.selection = Std.int(Math.min(Math.max(obj.selection, row), row + obj.sizeX - 1));
+								if (obj.sizeY > 1) {
+									if (directions[2]) {
+										obj.selection -= obj.sizeX;
+									}
+									
+									if (directions[1]) {
+										obj.selection += obj.sizeX;
+									}
+									
+									var column:Int = obj.prevSelection % obj.sizeX;
+									if (obj.wrapY) {
+										obj.selection = (obj.selection + obj.items.length) % obj.items.length;
+									} else {
+										obj.selection = Std.int(Math.min(Math.max(obj.selection, column), obj.sizeX * (obj.sizeY - 1) + column));
+									}
 								}
 							}
 							
-							if (obj.sizeY > 1) {
-								if (directions[2]) {
-									obj.selection -= obj.sizeX;
-								}
-								
-								if (directions[1]) {
-									obj.selection += obj.sizeX;
-								}
-								
-								var column:Int = obj.prevSelection % obj.sizeX;
-								if (obj.wrapY) {
-									obj.selection = (obj.selection + obj.items.length) % obj.items.length;
-								} else {
-									obj.selection = Std.int(Math.min(Math.max(obj.selection, column), obj.sizeX * (obj.sizeY - 1) + column));
+							var directionTrigger:Bool = false;
+							for (direction in directions) {
+								if (direction) {
+									directionTrigger = true;
+									break;
 								}
 							}
-						}
-						
-						var directionTrigger:Bool = false;
-						for (direction in directions) {
-							if (direction) {
-								directionTrigger = true;
-								break;
-							}
-						}
-						
-						if (directionTrigger) {
-							prevItem.onDirection(directions);
-						}
-						
-						var curItem:Dynamic = obj.items[obj.selection];
-						if (obj.prevSelection != obj.selection) {
-							prevItem.focused = false;
-							curItem.focused = true;
 							
-							prevItem.onUnfocus(curItem);
-							curItem.onFocus(prevItem);
+							if (directionTrigger) {
+								prevItem.onDirection(directions);
+							}
+							
+							var curItem:Dynamic = obj.items[obj.selection];
+							if (obj.prevSelection != obj.selection) {
+								prevItem.focused = false;
+								curItem.focused = true;
+								
+								prevItem.onUnfocus(curItem);
+								curItem.onFocus(prevItem);
+							}
 						}
 					}
 				}
