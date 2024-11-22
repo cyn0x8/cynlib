@@ -79,6 +79,7 @@ class CL_Menu extends ScriptedModule {
 			frozen: false,
 			
 			selection: 0,
+			prevSelection: 0,
 			items: data.items == null ? new Array() : data.items,
 			
 			wrapX: data.wrapX == null ? true : data.wrapX,
@@ -168,8 +169,8 @@ class CL_Menu extends ScriptedModule {
 					} else if (controls.check("accept", -1)) { // JUST_RELEASED
 						obj.items[obj.selection].onRelease();
 					} else {
-						var prevSelection:Int = obj.selection;
-						var prevItem:Dynamic = obj.items[prevSelection];
+						obj.prevSelection = obj.selection;
+						var prevItem:Dynamic = obj.items[obj.prevSelection];
 						
 						var directions:Array<Bool> = [
 							controls.UI_LEFT_P,
@@ -188,7 +189,7 @@ class CL_Menu extends ScriptedModule {
 									obj.selection += 1;
 								}
 								
-								var row:Int = Std.int(Math.floor(prevSelection / obj.sizeX)) * obj.sizeX;
+								var row:Int = Std.int(Math.floor(obj.prevSelection / obj.sizeX)) * obj.sizeX;
 								if (obj.wrapX) {
 									obj.selection = row + obj.selection % obj.sizeX;
 								} else {
@@ -205,7 +206,7 @@ class CL_Menu extends ScriptedModule {
 									obj.selection += obj.sizeX;
 								}
 								
-								var column:Int = prevSelection % obj.sizeX;
+								var column:Int = obj.prevSelection % obj.sizeX;
 								if (obj.wrapY) {
 									obj.selection = (obj.selection + obj.items.length) % obj.items.length;
 								} else {
@@ -227,7 +228,7 @@ class CL_Menu extends ScriptedModule {
 						}
 						
 						var curItem:Dynamic = obj.items[obj.selection];
-						if (prevSelection != obj.selection) {
+						if (obj.prevSelection != obj.selection) {
 							prevItem.focused = false;
 							curItem.focused = true;
 							
