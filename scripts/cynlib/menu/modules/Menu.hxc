@@ -248,9 +248,7 @@ class CL_Menu extends ScriptedModule {
 			obj.onUpdate(elapsed);
 			
 			for (item in obj.items) {
-				if (item.exists) {
-					item.onUpdate(elapsed);
-				}
+				item.onUpdate(elapsed);
 			}
 		};
 		
