@@ -94,30 +94,35 @@ class CL_Menu extends ScriptedModule {
 			enabled: false
 		};
 		
-		obj.sizeX = Std.int(data.sizeX == null ? 1 : Math.max(1, data.sizeX));
-		obj.sizeY = Std.int(data.sizeY == null ? Math.max(1, obj.items.length) / obj.sizeX : Math.max(1, data.sizeY));
+		if (data.autoEnable == null) {
+			data.autoEnable = true;
+		}
 		
 		for (i in 0 ... obj.items.length) {
 			var item:Dynamic = obj.items[i];
 			
 			item.menu = obj;
-			if (data.autoEnable == true) {
+			if (data.autoEnable) {
 				item.enabled = true;
 			}
 			
 			if (i == 0) {
 				item.focused = true;
-				item.onFocus(null);
 			}
 		}
+		
+		obj.sizeX = Std.int(data.sizeX == null ? 1 : Math.max(1, data.sizeX));
+		obj.sizeY = Std.int(data.sizeY == null ? Math.max(1, obj.items.length) / obj.sizeX : Math.max(1, data.sizeY));
 		
 		obj.pushItems = function(items:Array<Dynamic>, autoEnable:Bool = true):Void {
 			if (!obj.exists) {
 				return;
 			}
 			
-			for (item in items) {
-				if (items.length >= obj.sizeX * obj.sizeY) {
+			for (i in 0 ... items.length) {
+				var item:Dynamic = items[i];
+				
+				if (obj.items.length >= obj.sizeX * obj.sizeY) {
 					return;
 				}
 				
@@ -130,7 +135,6 @@ class CL_Menu extends ScriptedModule {
 				
 				if (obj.items.length == 1) {
 					item.focused = true;
-					item.onFocus(null);
 				}
 			}
 		};
