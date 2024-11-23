@@ -111,8 +111,10 @@ class CL_Menu extends ScriptedModule {
 			}
 		}
 		
-		obj.sizeX = Std.int(data.sizeX == null ? 1 : Math.max(1, data.sizeX));
-		obj.sizeY = Std.int(data.sizeY == null ? Math.max(1, obj.items.length) / obj.sizeX : Math.max(1, data.sizeY));
+		obj.sizeX = Std.int(Math.max(1, data.sizeX == null ? 1 : Math.min(obj.items.length, data.sizeX)));
+		
+		var maxRows:Int = Std.int(obj.items.length / obj.sizeX);
+		obj.sizeY = Std.int(Math.max(1, data.sizeY == null ? maxRows : Math.min(maxRows, data.sizeY)));
 		
 		obj.pushItems = function(items:Array<Dynamic>, autoEnable:Bool = true):Void {
 			if (!obj.exists) {

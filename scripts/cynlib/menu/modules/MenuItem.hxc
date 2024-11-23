@@ -55,7 +55,7 @@ class CL_MenuItem extends ScriptedModule {
 			data = {};
 		}
 		
-		return {
+		var obj:Dynamic = {
 			data: data.data == null ? {} : data.data,
 			
 			menu: data.menu,
@@ -75,5 +75,7 @@ class CL_MenuItem extends ScriptedModule {
 				
 			onUpdate: data.onUpdate == null ? function(elapsed:Float):Void {} : data.onUpdate
 		};
+		
+		return obj;
 	}
 }

@@ -8,6 +8,7 @@ import funkin.modding.module.ScriptedModule;
 import funkin.play.PlayState;
 
 typedef ReloadData = {
+	priority:Null<Int>,
 	callback:Null<String>,
 	variables:Null<()->StringMap>
 }
@@ -24,7 +25,30 @@ class CL_Reloader extends ScriptedModule {
 	
 	private var reload:(StringMap<ReloadData>)->Void = function(reloadData:StringMap<ReloadData>):Void {
 		reloadData = reloadData.copy();
+		
+		var sorted:Array<String> = [];
 		for (module in reloadData.keys()) {
+			sorted.push(module);
+		}
+		
+		sorted.sort(function(a:String, b:String):Int {
+			var aData:ReloadData = reloadData.get(a);
+			var bData:ReloadData = reloadData.get(b);
+			
+			if (aData.priority == null && bData.priority == null) {
+				return 0;
+			} else if (aData.priority == null) {
+				return 1;
+			} else if (bData.priority == null) {
+				return -1;
+			}
+			
+			return aData.priority > bData.priority ? 1 : -1;
+		});
+		
+		for (i in 0 ... sorted.length) {
+			var module:String = sorted[i];
+			
 			trace("cynlib: reloading module \"" + module + "\"");
 			
 			var data:ReloadData = reloadData.get(module);
