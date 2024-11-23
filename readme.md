@@ -1,6 +1,6 @@
 # cynlib
 
-various tools and utils for friday night funkin modding
+library for fnf modding
 
 ## overview
 

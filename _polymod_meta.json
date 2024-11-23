@@ -1,6 +1,6 @@
 {
 	"title": "cynlib",
-	"description": "various tools and utils for friday night funkin modding",
+	"description": "library for fnf modding",
 	"homepage": "https://github.com/cyn0x8/cynlib",
 	
 	"contributors": [
