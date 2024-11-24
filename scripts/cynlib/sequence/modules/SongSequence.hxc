@@ -1,7 +1,5 @@
-import flixel.util.FlxTimer;
-
 import funkin.Conductor;
-import funkin.modding.module.Module;
+import funkin.modding.module.ScriptedModule;
 
 typedef SequenceEvent = {
 	time:Float,
@@ -25,7 +23,7 @@ typedef SongSequence = {
 	destroy:()->Void
 }
 
-class CL_SongSequence extends Module {
+class CL_SongSequence extends ScriptedModule {
 	public function new() {
 		super("CL_SongSequence", -2147483648);
 	}

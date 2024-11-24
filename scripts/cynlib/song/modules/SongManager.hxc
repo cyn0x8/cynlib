@@ -1,7 +1,6 @@
-import thx.Objects;
-
 import funkin.modding.module.ScriptedModule;
 import funkin.play.PlayState;
+import funkin.util.ReflectUtil;
 
 class CL_SongManager extends ScriptedModule {
 	public function new() {
@@ -208,12 +207,12 @@ class CL_SongManager extends ScriptedModule {
 			callback(event, songVars);
 		}
 		
-		for (key in Objects.fields(callbacks)) {
+		for (key in ReflectUtil.getAnonymousFieldsOf(callbacks)) {
 			if (key == "playStateCreate") {
 				continue;
 			}
 			
-			Objects.getPath(callbacks, key).resize(0);
+			ReflectUtil.getAnonymousField(callbacks, key).resize(0);
 		}
 		
 		songVars = null;

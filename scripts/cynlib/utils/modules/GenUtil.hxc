@@ -4,10 +4,10 @@ import thx.Objects;
 import thx.Types;
 
 import flixel.FlxG;
-import flixel.math.FlxMath;
 import flixel.tweens.FlxEase;
 
 import funkin.modding.module.ScriptedModule;
+import funkin.util.ReflectUtil;
 
 class CL_GenUtil extends ScriptedModule {
 	public function new() {
@@ -56,7 +56,7 @@ class CL_GenUtil extends ScriptedModule {
 	public function objectPaths(obj:Dynamic):Array<String> {
 		var ret:Array<String> = [];
 		
-		for (key in Objects.fields(obj)) {
+		for (key in ReflectUtil.getAnonymousFieldsOf(obj)) {
 			ret.push(key);
 			
 			var val:Dynamic = Objects.getPath(obj, key);
@@ -111,10 +111,10 @@ class CL_GenUtil extends ScriptedModule {
 		name = StringTools.trim(name);
 		name = name.toLowerCase();
 		
-		if (Objects.getPath(eases, name) == null) {
+		if (ReflectUtil.getAnonymousField(eases, name) == null) {
 			name = "linear";
 		}
 		
-		return Objects.getPath(eases, name);
+		return ReflectUtil.getAnonymousField(eases, name);
 	}
 }
