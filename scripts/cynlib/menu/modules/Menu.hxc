@@ -1,4 +1,5 @@
 import flixel.FlxBasic;
+import flixel.math.FlxMath;
 import flixel.util.FlxTimer;
 
 import funkin.PlayerSettings;
@@ -113,7 +114,7 @@ class CL_Menu extends ScriptedModule {
 		
 		obj.sizeX = Std.int(Math.max(1, data.sizeX == null ? 1 : Math.min(obj.items.length, data.sizeX)));
 		
-		var maxRows:Int = Std.int(obj.items.length / obj.sizeX);
+		var maxRows:Int = Std.int(Math.floor(obj.items.length / obj.sizeX));
 		obj.sizeY = Std.int(Math.max(1, data.sizeY == null ? maxRows : Math.min(maxRows, data.sizeY)));
 		
 		obj.pushItems = function(items:Array<Dynamic>, autoEnable:Bool = true):Void {
@@ -188,6 +189,8 @@ class CL_Menu extends ScriptedModule {
 							
 							if (prevItem.autoNavigate) {
 								if (obj.sizeX > 1) {
+									var curRow:Int = Std.int(Math.floor(obj.selection / obj.sizeX));
+									
 									if (directions[0]) {
 										obj.selection -= 1;
 									}
@@ -196,15 +199,16 @@ class CL_Menu extends ScriptedModule {
 										obj.selection += 1;
 									}
 									
-									var row:Int = Std.int(Math.floor(obj.prevSelection / obj.sizeX)) * obj.sizeX;
 									if (obj.wrapX) {
-										obj.selection = row + obj.selection % obj.sizeX;
+										obj.selection = curRow * obj.sizeX + (obj.selection + obj.sizeX) % obj.sizeX;
 									} else {
-										obj.selection = Std.int(Math.min(Math.max(obj.selection, row), row + obj.sizeX - 1));
+										obj.selection = Std.int(FlxMath.bound(obj.selection, curRow * sizeX, (curRow + 1) * sizeX - 1));
 									}
 								}
 								
 								if (obj.sizeY > 1) {
+									var curColumn:Int = obj.selection % obj.sizeX;
+									
 									if (directions[2]) {
 										obj.selection -= obj.sizeX;
 									}
@@ -213,11 +217,10 @@ class CL_Menu extends ScriptedModule {
 										obj.selection += obj.sizeX;
 									}
 									
-									var column:Int = obj.prevSelection % obj.sizeX;
 									if (obj.wrapY) {
-										obj.selection = (obj.selection + obj.items.length) % obj.items.length;
+										obj.selection = (obj.selection + obj.sizeX * obj.sizeY) % (obj.sizeX * obj.sizeY);
 									} else {
-										obj.selection = Std.int(Math.min(Math.max(obj.selection, column), obj.sizeX * (obj.sizeY - 1) + column));
+										obj.selection = Std.int(FlxMath.bound(obj.selection, curColumn, obj.sizeX * (obj.sizeY - 1) + curColumn));
 									}
 								}
 							}
