@@ -88,6 +88,10 @@ class CL_Sequence extends ScriptedModule {
 				function(timer:FlxTimer):Void {
 					event.callback();
 					obj.timers.remove(timer);
+					
+					if (obj.completed()) {
+						obj.destroy();
+					}
 				}
 			));
 		}

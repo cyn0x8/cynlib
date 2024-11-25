@@ -32,9 +32,12 @@ class CL_SongSequence extends ScriptedModule {
 		var obj:Dynamic = {
 			timers: new Array(),
 			
-			startTime: Conductor.get_instance().songPosition,
+			curTime: Math.NEGATIVE_INFINITY,
+			startTime: 0,
 			
-			running: true,
+			running: false,
+			
+			toRemove: new Array(),
 			
 			exists: true
 		};
@@ -69,18 +72,28 @@ class CL_SongSequence extends ScriptedModule {
 			return completed;
 		};
 		
-		obj.update = function(elapsed:Float):Void {
+		obj.update = function():Void {
 			if (!obj.exists || !obj.get_running()) {
 				return;
 			}
 			
-			var len:Int = obj.timers.length;
-			for (i in 0...len) {
-				var timer:SequenceEvent = obj.timers[len - 1 - i];
-				if (timer.time + obj.startTime > Conductor.get_instance().songPosition) {
+			var songPosition:Float = Conductor.get_instance().songPosition;
+			if (songPosition < obj.curTime) { // went back in time??
+				obj.destroy();
+				return;
+			}
+			
+			obj.curTime = songPosition;
+			
+			for (timer in obj.timers) {
+				if (obj.curTime > timer.time + obj.startTime) {
 					timer.callback();
-					obj.timers.remove(timer);
+					obj.toRemove.push(timer);
 				}
+			}
+			
+			while (obj.toRemove.length > 0) {
+				obj.timers.remove(obj.toRemove.pop());
 			}
 			
 			if (obj.completed()) {
@@ -106,7 +119,7 @@ class CL_SongSequence extends ScriptedModule {
 		
 		for (event in events) {
 			event.time *= mult * 1000;
-			timers.push(event);
+			obj.timers.push(event);
 		}
 		
 		obj.set_running(start);
@@ -121,7 +134,7 @@ class CL_SongSequence extends ScriptedModule {
 	private var alive:Array<SongSequence> = new Array();
 	override public function onUpdate(event:UpdateScriptEvent):Void {
 		for (obj in alive) {
-			obj.update(event.elapsed);
+			obj.update();
 		}
 	}
 	
