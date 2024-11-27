@@ -1,3 +1,5 @@
+package cynlib.menu;
+
 import flixel.FlxBasic;
 
 import funkin.modding.module.ScriptedModule;
@@ -41,9 +43,9 @@ typedef MenuItemData = {
 	onUpdate:Null<(Float)->Void>
 }
 
-class CL_MenuItem extends ScriptedModule {
+class MenuItem extends ScriptedModule {
 	public function new() {
-		super("CL_MenuItem", -2147483648);
+		super("cynlib.menu.MenuItem", -2147483648);
 	}
 	
 	override public function onCreate(event:ScriptEvent):Void {

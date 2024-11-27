@@ -1,10 +1,12 @@
+package cynlib.song;
+
 import funkin.modding.module.ScriptedModule;
 import funkin.play.PlayState;
 import funkin.util.ReflectUtil;
 
-class CL_SongManager extends ScriptedModule {
+class SongManager extends ScriptedModule {
 	public function new() {
-		super("CL_SongManager", -2147483648);
+		super("cynlib.song.SongManager", -2147483648);
 	}
 	
 	public var songVars:Null<SongVars> = null;

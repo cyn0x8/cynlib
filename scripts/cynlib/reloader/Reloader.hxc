@@ -1,4 +1,8 @@
+package cynlib.reloader;
+
 import haxe.ds.StringMap;
+
+import thx.Types;
 
 import flixel.FlxG;
 
@@ -13,12 +17,12 @@ typedef ReloadData = {
 	variables:Null<()->StringMap>
 }
 
-class CL_Reloader extends ScriptedModule {
+class Reloader extends ScriptedModule {
 	public function new() {
-		super("CL_Reloader", -2147483648);
+		super("cynlib.reloader.Reloader", -2147483648);
 	}
 	
-	public var targetState:String = null;
+	public var targetState:Null<String> = null;
 	
 	public var reloadPre:StringMap<ReloadData> = new StringMap();
 	public var reloadPost:StringMap<ReloadData> = new StringMap();
@@ -26,9 +30,11 @@ class CL_Reloader extends ScriptedModule {
 	private var reload:(StringMap<ReloadData>)->Void = function(reloadData:StringMap<ReloadData>):Void {
 		reloadData = reloadData.copy();
 		
-		var sorted:Array<String> = [];
+		var sorted:Array<String> = new Array();
 		for (module in reloadData.keys()) {
-			sorted.push(module);
+			if (Types.isAnonymousObject(reloadData.get(module))) {
+				sorted.push(module);
+			}
 		}
 		
 		sorted.sort(function(a:String, b:String):Int {
@@ -53,7 +59,7 @@ class CL_Reloader extends ScriptedModule {
 			
 			var data:ReloadData = reloadData.get(module);
 			if (data.variables != null) {
-				var variables:StringMap = data.variables();
+				var variables:StringMap<Dynamic> = data.variables();
 				for (key in variables.keys()) {
 					ModuleHandler.getModule(module).scriptSet(key, variables.get(key));
 				}

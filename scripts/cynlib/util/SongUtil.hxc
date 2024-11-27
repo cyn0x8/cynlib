@@ -1,3 +1,5 @@
+package cynlib.util;
+
 import Float;
 import Int;
 import String;
@@ -14,9 +16,9 @@ import funkin.play.PlayState;
 import funkin.play.stage.Stage;
 import funkin.util.ReflectUtil;
 
-class CL_SongUtil extends ScriptedModule {
+class SongUtil extends ScriptedModule {
 	public function new() {
-		super("CL_SongUtil", -2147483648);
+		super("cynlib.util.SongUtil", -2147483648);
 	}
 	
 	override public function onCreate(event:ScriptEvent):Void {

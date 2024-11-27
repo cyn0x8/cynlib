@@ -1,3 +1,5 @@
+package cynlib.sequence;
+
 import funkin.Conductor;
 import funkin.modding.module.ScriptedModule;
 
@@ -23,9 +25,9 @@ typedef SongSequence = {
 	destroy:()->Void
 }
 
-class CL_SongSequence extends ScriptedModule {
+class SongSequence extends ScriptedModule {
 	public function new() {
-		super("CL_SongSequence", -2147483648);
+		super("cynlib.sequence.SongSequence", -2147483648);
 	}
 	
 	public function new_SongSequence(events:Array<SequenceEvent>, mult:Float = 1, start:Bool = true):SongSequence {

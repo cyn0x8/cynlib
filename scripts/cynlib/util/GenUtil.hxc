@@ -1,3 +1,5 @@
+package cynlib.util;
+
 import StringTools;
 
 import thx.Objects;
@@ -9,9 +11,9 @@ import flixel.tweens.FlxEase;
 import funkin.modding.module.ScriptedModule;
 import funkin.util.ReflectUtil;
 
-class CL_GenUtil extends ScriptedModule {
+class GenUtil extends ScriptedModule {
 	public function new() {
-		super("CL_GenUtil", -2147483648);
+		super("cynlib.util.GenUtil", -2147483648);
 	}
 	
 	override public function onCreate(event:ScriptEvent):Void {

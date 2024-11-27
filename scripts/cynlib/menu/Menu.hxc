@@ -1,3 +1,5 @@
+package cynlib.menu;
+
 import flixel.FlxBasic;
 import flixel.math.FlxMath;
 import flixel.util.FlxTimer;
@@ -61,9 +63,9 @@ typedef MenuData = {
 	onUpdate:Null<(Float)->Void>
 }
 
-class CL_Menu extends ScriptedModule {
+class Menu extends ScriptedModule {
 	public function new() {
-		super("CL_Menu", -2147483648);
+		super("cynlib.menu.Menu", -2147483648);
 	}
 	
 	public function new_Menu(?data:MenuData):Menu {

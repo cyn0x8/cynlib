@@ -1,0 +1,46 @@
+package cynlib.util;
+
+import flixel.math.FlxMath;
+
+import funkin.modding.module.ScriptedModule;
+import funkin.util.MathUtil;
+
+class MathUtil extends ScriptedModule {
+	public function new() {
+		super("cynlib.util.MathUtil", -2147483648);
+	}
+	
+	override public function onCreate(event:ScriptEvent):Void {
+		active = false;
+	}
+	
+	public function inverseLerp(v:Float, a:Float, b:Float):Float {
+		return (v - a) / (b - a);
+	}
+	
+	// https://twitter.com/FreyaHolmer/status/1757918211679650262
+	public static function smoothLerpDecay(base:Float, target:Float, deltaTime:Float, halfLife:Float):Float {
+		if (deltaTime == 0) {
+			return base;
+		}
+		
+		if (base == target) {
+			return target;
+		}
+		
+		return MathUtil.lerp(target, base, MathUtil.exp2(-deltaTime / halfLife));
+	}
+	
+	// https://twitter.com/FreyaHolmer/status/1757918211679650262
+	public static function smoothLerpPrecision(base:Float, target:Float, deltaTime:Float, duration:Float, precision:Float = 1 / 100):Float {
+		if (deltaTime == 0) {
+			return base;
+		}
+		
+		if (base == target) {
+			return target;
+		}
+		
+		return MathUtil.lerp(target, base, Math.pow(precision, deltaTime / duration));
+	}
+}

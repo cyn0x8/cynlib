@@ -1,3 +1,5 @@
+package cynlib.neocam;
+
 import haxe.ds.IntMap;
 import haxe.ds.StringMap;
 
@@ -63,9 +65,9 @@ typedef NeocamData = {
 	noteOffsetScale:Float
 }
 
-class CL_Neocam extends ScriptedModule {
+class Neocam extends ScriptedModule {
 	public function new() {
-		super("CL_Neocam", -2147483648);
+		super("cynlib.neocam.Neocam", -2147483648);
 	}
 	
 	public function new_Neocam(?data:NeocamData):Neocam {
@@ -83,34 +85,34 @@ class CL_Neocam extends ScriptedModule {
 			gameCamera: data.gameCamera == null ? false : data.gameCamera,
 			
 			position: {
-				x: ModuleHandler.getModule("CL_MovingVal").scriptCall("new_MovingVal"),
-				y: ModuleHandler.getModule("CL_MovingVal").scriptCall("new_MovingVal")
+				x: ModuleHandler.getModule("cynlib.neocam.MovingVal").scriptCall("new_MovingVal"),
+				y: ModuleHandler.getModule("cynlib.neocam.MovingVal").scriptCall("new_MovingVal")
 			},
 			
 			positionShake: {
-				x: ModuleHandler.getModule("CL_MovingVal").scriptCall("new_MovingVal", [{shake: true}]),
-				y: ModuleHandler.getModule("CL_MovingVal").scriptCall("new_MovingVal", [{shake: true}])
+				x: ModuleHandler.getModule("cynlib.neocam.MovingVal").scriptCall("new_MovingVal", [{shake: true}]),
+				y: ModuleHandler.getModule("cynlib.neocam.MovingVal").scriptCall("new_MovingVal", [{shake: true}])
 			},
 			
 			offset: {
-				x: ModuleHandler.getModule("CL_MovingVal").scriptCall("new_MovingVal"),
-				y: ModuleHandler.getModule("CL_MovingVal").scriptCall("new_MovingVal")
+				x: ModuleHandler.getModule("cynlib.neocam.MovingVal").scriptCall("new_MovingVal"),
+				y: ModuleHandler.getModule("cynlib.neocam.MovingVal").scriptCall("new_MovingVal")
 			},
 			
 			offsetShake: {
-				x: ModuleHandler.getModule("CL_MovingVal").scriptCall("new_MovingVal", [{shake: true}]),
-				y: ModuleHandler.getModule("CL_MovingVal").scriptCall("new_MovingVal", [{shake: true}])
+				x: ModuleHandler.getModule("cynlib.neocam.MovingVal").scriptCall("new_MovingVal", [{shake: true}]),
+				y: ModuleHandler.getModule("cynlib.neocam.MovingVal").scriptCall("new_MovingVal", [{shake: true}])
 			},
 			
-			zoom: ModuleHandler.getModule("CL_MovingVal").scriptCall("new_MovingVal", [{cur: 1}]),
-			zoomShake: ModuleHandler.getModule("CL_MovingVal").scriptCall("new_MovingVal", [{shake: true}]),
+			zoom: ModuleHandler.getModule("cynlib.neocam.MovingVal").scriptCall("new_MovingVal", [{cur: 1}]),
+			zoomShake: ModuleHandler.getModule("cynlib.neocam.MovingVal").scriptCall("new_MovingVal", [{shake: true}]),
 			
-			alpha: ModuleHandler.getModule("CL_MovingVal").scriptCall("new_MovingVal", [{cur: 1}]),
+			alpha: ModuleHandler.getModule("cynlib.neocam.MovingVal").scriptCall("new_MovingVal", [{cur: 1}]),
 			
 			noteOffsetScale: data.noteOffsetScale == null ? 0 : data.noteOffsetScale,
 			noteOffset: {
-				x: ModuleHandler.getModule("CL_MovingVal").scriptCall("new_MovingVal"),
-				y: ModuleHandler.getModule("CL_MovingVal").scriptCall("new_MovingVal")
+				x: ModuleHandler.getModule("cynlib.neocam.MovingVal").scriptCall("new_MovingVal"),
+				y: ModuleHandler.getModule("cynlib.neocam.MovingVal").scriptCall("new_MovingVal")
 			},
 			
 			targets: new StringMap(),
@@ -194,14 +196,14 @@ class CL_Neocam extends ScriptedModule {
 			switch (eventData.eventKind) {
 				case "FocusCamera": {
 					if (obj.gameCamera) {
-						var x:Null<Float> = ModuleHandler.getModule("CL_SongUtil").scriptCall("eventGetFloat", [eventData, "x"]);
+						var x:Null<Float> = ModuleHandler.getModule("cynlib.util.SongUtil").scriptCall("eventGetFloat", [eventData, "x"]);
 						if (x == null) {
 							x = 0;
 						}
 						
 						x -= 640;
 						
-						var y:Null<Float> = ModuleHandler.getModule("CL_SongUtil").scriptCall("eventGetFloat", [eventData, "y"]);
+						var y:Null<Float> = ModuleHandler.getModule("cynlib.util.SongUtil").scriptCall("eventGetFloat", [eventData, "y"]);
 						if (y == null) {
 							y = 0;
 						}
@@ -211,7 +213,7 @@ class CL_Neocam extends ScriptedModule {
 						if (PlayState.instance != null) {
 							var stage:Stage = PlayState.instance.currentStage;
 							
-							var charID:Null<Int> = ModuleHandler.getModule("CL_SongUtil").scriptCall("eventGetInt", [eventData, "char"]);
+							var charID:Null<Int> = ModuleHandler.getModule("cynlib.util.SongUtil").scriptCall("eventGetInt", [eventData, "char"]);
 							switch (charID) {
 								case 0: {
 									if (stage.getBoyfriend() != null) {
@@ -239,7 +241,7 @@ class CL_Neocam extends ScriptedModule {
 							}
 						}
 						
-						var duration:Null<Float> = ModuleHandler.getModule("CL_SongUtil").scriptCall("eventGetFloat", [eventData, "duration"]);
+						var duration:Null<Float> = ModuleHandler.getModule("cynlib.util.SongUtil").scriptCall("eventGetFloat", [eventData, "duration"]);
 						if (duration == null) {
 							duration = 0;
 						}
@@ -248,7 +250,7 @@ class CL_Neocam extends ScriptedModule {
 							duration = Conductor.instance.stepLengthMs * duration / 1000;
 						}
 						
-						var ease:Null<String> = ModuleHandler.getModule("CL_SongUtil").scriptCall("eventGetString", [eventData, "ease"]);
+						var ease:Null<String> = ModuleHandler.getModule("cynlib.util.SongUtil").scriptCall("eventGetString", [eventData, "ease"]);
 						switch (ease) {
 							case "CLASSIC": {
 								obj.position.x.set_target(x);
@@ -270,12 +272,12 @@ class CL_Neocam extends ScriptedModule {
 				
 				case "SetCameraBop": {
 					if (PlayState.instance != null) {
-						var rate:Null<Int> = ModuleHandler.getModule("CL_SongUtil").scriptCall("eventGetInt", [eventData, "rate"]);
+						var rate:Null<Int> = ModuleHandler.getModule("cynlib.util.SongUtil").scriptCall("eventGetInt", [eventData, "rate"]);
 						if (rate == null) {
 							rate = Constants.DEFAULT_ZOOM_RATE;
 						}
 						
-						var intensity:Null<Float> = ModuleHandler.getModule("CL_SongUtil").scriptCall("eventGetFloat", [eventData, "intensity"]);
+						var intensity:Null<Float> = ModuleHandler.getModule("cynlib.util.SongUtil").scriptCall("eventGetFloat", [eventData, "intensity"]);
 						if (intensity == null) {
 							intensity = 1.0;
 						}
@@ -299,22 +301,22 @@ class CL_Neocam extends ScriptedModule {
 							PlayState.instance.currentStage != null &&
 							!PlayState.instance.isMinimalMode
 						) {
-							var zoom:Null<Float> = ModuleHandler.getModule("CL_SongUtil").scriptCall("eventGetFloat", [eventData, "zoom"]);
+							var zoom:Null<Float> = ModuleHandler.getModule("cynlib.util.SongUtil").scriptCall("eventGetFloat", [eventData, "zoom"]);
 							if (zoom == null) {
 								zoom = 1;
 							}
 							
-							var duration:Null<Float> = ModuleHandler.getModule("CL_SongUtil").scriptCall("eventGetFloat", [eventData, "duration"]);
+							var duration:Null<Float> = ModuleHandler.getModule("cynlib.util.SongUtil").scriptCall("eventGetFloat", [eventData, "duration"]);
 							if (duration == null) {
 								duration = 4;
 							}
 							
-							var mode:Null<String> = ModuleHandler.getModule("CL_SongUtil").scriptCall("eventGetString", [eventData, "mode"]);
+							var mode:Null<String> = ModuleHandler.getModule("cynlib.util.SongUtil").scriptCall("eventGetString", [eventData, "mode"]);
 							if (mode == null) {
 								mode = "direct";
 							}
 							
-							var ease:Null<String> = ModuleHandler.getModule("CL_SongUtil").scriptCall("eventGetString", [eventData, "ease"]);
+							var ease:Null<String> = ModuleHandler.getModule("cynlib.util.SongUtil").scriptCall("eventGetString", [eventData, "ease"]);
 							if (ease == null) {
 								ease = "linear";
 							}
