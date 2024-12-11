@@ -16,6 +16,9 @@ import funkin.play.PlayState;
 import funkin.play.stage.Stage;
 import funkin.util.ReflectUtil;
 
+/**
+ * Song utility module.
+ */
 class SongUtil extends ScriptedModule {
 	public function new() {
 		super("cynlib.util.SongUtil", -2147483648);
@@ -25,6 +28,9 @@ class SongUtil extends ScriptedModule {
 		active = false;
 	}
 	
+	/**
+	 * Calls an event to center the camera between the player and opponent camera focus points.
+	 */
 	public function centerCamera():Void {
 		if (PlayState.instance == null) {
 			return;
@@ -44,6 +50,9 @@ class SongUtil extends ScriptedModule {
 		});
 	}
 	
+	/**
+	 * Attempts to unmute both player and opponent vocals.
+	 */
 	public function unmuteVocals():Void {
 		if (PlayState.instance == null || PlayState.instance.vocals == null) {
 			return;
@@ -60,6 +69,12 @@ class SongUtil extends ScriptedModule {
 		}
 	}
 	
+	/**
+	 * Triggers a song event.
+	 * 
+	 * @param kind The event kind.
+	 * @param value The event data.
+	 */
 	public function doEvent(kind:String, ?value:Dynamic):Void {
 		if (PlayState.instance == null || Conductor.get_instance() == null) {
 			return;
@@ -74,14 +89,35 @@ class SongUtil extends ScriptedModule {
 		PlayState.instance.dispatchEvent(scriptEvent);
 	}
 	
+	/**
+	 * Gets a `Dynamic` value from a song event.
+	 * 
+	 * @param event The event to get the value from.
+	 * @param key The key to get the value from.
+	 * @return The value, or `null` if it doesn't exist.
+	 */
 	public function eventGetDynamic(event:SongEventDataRaw, key:String):Null<Dynamic> {
 		return event.value == null ? null : ReflectUtil.getAnonymousField(event.value, key);
 	}
 	
+	/**
+	 * Gets a `Bool` value from a song event.
+	 * 
+	 * @param event The event to get the value from.
+	 * @param key The key to get the value from.
+	 * @return The value, or `null` if it doesn't exist.
+	 */
 	public function eventGetBool(event:SongEventDataRaw, key:String):Null<Bool> {
 		return event.value == null ? null : (ReflectUtil.getAnonymousField(event.value, key) == true);
 	}
 	
+	/**
+	 * Gets an `Int` value from a song event.
+	 * 
+	 * @param event The event to get the value from.
+	 * @param key The key to get the value from.
+	 * @return The value, or `null` if it doesn't exist.
+	 */
 	public function eventGetInt(event:SongEventDataRaw, key:String):Null<Int> {
 		if (event.value == null) {
 			return null;
@@ -107,6 +143,13 @@ class SongUtil extends ScriptedModule {
 		return null;
 	}
 	
+	/**
+	 * Gets a `Float` value from a song event.
+	 * 
+	 * @param event The event to get the value from.
+	 * @param key The key to get the value from.
+	 * @return The value, or `null` if it doesn't exist.
+	 */
 	public function eventGetFloat(event:SongEventDataRaw, key:String):Null<Float> {
 		if (event.value == null) {
 			return null;
@@ -132,14 +175,35 @@ class SongUtil extends ScriptedModule {
 		return null;
 	}
 	
+	/**
+	 * Gets a `String` value from a song event.
+	 * 
+	 * @param event The event to get the value from.
+	 * @param key The key to get the value from.
+	 * @return The value, or `null` if it doesn't exist.
+	 */
 	public function eventGetString(event:SongEventDataRaw, key:String):Null<String> {
 		return event.value == null ? null : ReflectUtil.getAnonymousField(event.value, key);
 	}
 	
+	/**
+	 * Gets an `Array<Dynamic>` value from a song event.
+	 * 
+	 * @param event The event to get the value from.
+	 * @param key The key to get the value from.
+	 * @return The value, or `null` if it doesn't exist.
+	 */
 	public function eventGetArray(event:SongEventDataRaw, key:String):Null<Array<Dynamic>> {
 		return event.value == null ? null : ReflectUtil.getAnonymousField(event.value, key);
 	}
 	
+	/**
+	 * Gets an `Array<Bool>` value from a song event.
+	 * 
+	 * @param event The event to get the value from.
+	 * @param key The key to get the value from.
+	 * @return The value, or `null` if it doesn't exist.
+	 */
 	public function eventGetBoolArray(event:SongEventDataRaw, key:String):Null<Array<Bool>> {
 		return event.value == null ? null : ReflectUtil.getAnonymousField(event.value, key);
 	}

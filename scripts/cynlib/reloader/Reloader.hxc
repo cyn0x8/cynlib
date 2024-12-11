@@ -11,20 +11,111 @@ import funkin.modding.module.ModuleHandler;
 import funkin.modding.module.ScriptedModule;
 import funkin.play.PlayState;
 
+/**
+ * Data for reloading a module.
+ */
 typedef ReloadData = {
+	/**
+	 * The priority of the reload, where lower numbers are reloaded first.
+	 * If null, the order is random but after all non-null priorities.
+	 * 
+	 * `reloadPre` and `reloadPost` priorities are separate.
+	 */
 	priority:Null<Int>,
+	
+	/**
+	 * The name of the callback to call after reloading.
+	 * Useful for "re-initializing" things.
+	 * 
+	 * The module should be re-registered with `Reloader` in this callback.
+	 * If not, make sure to do it somewhere else or the module won't be reloaded again.
+	 */
 	callback:Null<String>,
+	
+	/**
+	 * A function that returns a map of the module's variable names to their references,
+	 * to "persist" the variables across reloads.
+	 * 
+	 * It's set up this way because when this function tries to access the variables
+	 * defined in it, the references are actually to the old module, so even though the
+	 * reloaded module has the values reset, we can still access the old values.
+	 */
 	variables:Null<()->StringMap>
 }
 
+/**
+ * Helps make polymod hot-reloading less annoying when deaing with modules and scripted states.
+ * 
+ * Example:
+ * ```haxe
+ * package exampleMod;
+ * 
+ * import haxe.ds.StringMap;
+ * 
+ * import funkin.modding.module.ModuleHandler;
+ * import funkin.modding.module.ScriptedModule;
+ * 
+ * class ExampleModule extends ScriptedModule {
+ *     public function new() {
+ *         super("exampleMod.ExampleModule");
+ *     }
+ *     
+ *     // Target variable to persist across reloads.
+ *     public var exampleVariable:Int = 0;
+ *     
+ *     override public function onCreate(event:ScriptEvent):Void {
+ *         exampleFunction();
+ *         hook();
+ *     }
+ *     
+ *     private function hook():Void {
+ *         // Registering the module with `Reloader`.
+ *         ModuleHandler.getModule("cynlib.reloader.Reloader").scriptGet("reloadPre").set("exampleMod.ExampleModule", {
+ *             priority: 0,
+ *             callback: "onReload",
+ *             variables: function():StringMap {
+ *                 return [
+ *                     // The reference to the variable (of this module's instance) persists across the reload.
+ *                     "exampleVariable" => exampleVariable
+ *                 ];
+ *             }
+ *         });
+ *     }
+ *     
+ *     public function onReload():Void {
+ *         exampleFunction();
+ *         
+ *         // Important to re-register the module with `Reloader`!
+ *         hook();
+ *     }
+ *     
+ *     private function exampleFunction():Void {
+ *         exampleVariable++;
+ *         
+ *         // This should increment with each reload since the variable persists via `Reloader`.
+ *         trace("exampleMod.ExampleModule: exampleVariable = " + Std.string(exampleVariable));
+ *     }
+ * }
+ * ```
+ */
 class Reloader extends ScriptedModule {
 	public function new() {
 		super("cynlib.reloader.Reloader", -2147483648);
 	}
 	
+	/**
+	 * The target ScriptedMusicBeatState to initialize and switch to after reloading.
+	 */
 	public var targetState:Null<String> = null;
 	
+	/**
+	 * Map of modules to "reload" before switching states on reload.
+	 */
 	public var reloadPre:StringMap<ReloadData> = new StringMap();
+	
+	/**
+	 * Map of modules to "reload" after switching states on reload.
+	 */
 	public var reloadPost:StringMap<ReloadData> = new StringMap();
 	
 	private var reload:(StringMap<ReloadData>)->Void = function(reloadData:StringMap<ReloadData>):Void {

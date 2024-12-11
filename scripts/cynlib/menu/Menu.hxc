@@ -8,66 +8,200 @@ import funkin.PlayerSettings;
 import funkin.input.Controls;
 import funkin.modding.module.ScriptedModule;
 
+/**
+ * An object representing a menu.
+ */
 typedef Menu = {
+	/**
+	 * Arbitrary custom data attached to the menu.
+	 */
 	data:Null<Dynamic>,
 	
+	/**
+	 * Arbitrary related container object.
+	 */
 	container:Null<FlxBasic>,
 	
+	/**
+	 * Whether menu input is enabled.
+	 */
 	enabled:Bool,
+	
+	/**
+	 * Stops the menu from updating completely.
+	 * 
+	 * `enabled` is ignored if `true`.
+	 */
 	frozen:Bool,
 	
 	selection:Int,
+	
+	/**
+	 * All `MenuItem`s in the menu.
+	 * 
+	 * Don't push to directly, use `pushItems` instead.
+	 */
 	items:Array<Dynamic>,
 	
+	/**
+	 * The number of columns in the menu.
+	 */
 	sizeX:Int,
+	
+	/**
+	 * The number of rows in the menu.
+	 */
 	sizeY:Int,
 	
+	/**
+	 * Whether the menu should wrap around the X axis.
+	 */
 	wrapX:Bool,
+	
+	/**
+	 * Whether the menu should wrap around the Y axis.
+	 */
 	wrapY:Bool,
 	
+	/**
+	 * Arbitrary callback meant to be called when the menu is entered.
+	 */
 	onEnter:Null<()->Void>,
+	
+	/**
+	 * Arbitrary callback meant to be called when the menu is exited.
+	 * 
+	 * Should typically be called within `onBack`, but depends on the context.
+	 */
 	onExit:Null<()->Void>,
+	
+	/**
+	 * Called when the back button is pressed.
+	 */
 	onBack:Null<()->Void>,
 	
+	/**
+	 * Called every frame.
+	 * 
+	 * @param elapsed The time elapsed since the last frame in seconds.
+	 */
 	onUpdate:Null<(Float)->Void>,
 	
-	pushItems:(Array<Dynamic>)->Void,
+	/**
+	 * Push existing `MenuItem`s to the menu.
+	 * 
+	 * @param items The items to add in order.
+	 * @param autoEnable Whether to automatically enable the items as they're added.
+	 */
+	pushItems:(Array<Dynamic>, Bool)->Void,
 	
+	/**
+	 * Prevents input for a duration.
+	 * 
+	 * @param duration The debounce time in seconds.
+	 */
 	debounce:(Float)->Void,
+	
 	debounceTimer:Null<FlxTimer>,
 	
 	update:(Float)->Void,
 	
+	/**
+	 * Whether the menu exists.
+	 */
 	exists:Bool,
+	
+	/**
+	 * Destroys the menu. Does not destroy the items.
+	 */
 	destroy:()->Void
 }
 
+/**
+ * Data for creating a `Menu` object.
+ */
 typedef MenuData = {
+	/**
+	 * Arbitrary custom data attached to the menu.
+	 */
 	data:Null<Dynamic>,
 	
+	/**
+	 * Arbitrary related container object.
+	 */
 	container:Null<FlxBasic>,
 	
+	/**
+	 * The items to add in order.
+	 */
 	items:Null<Array>,
+	
+	/**
+	 * Whether to automatically enable the items when the menu is created.
+	 */
 	autoEnable:Null<Bool>,
 	
+	/**
+	 * The number of columns in the menu.
+	 */
 	sizeX:Null<Int>,
+	
+	/**
+	 * The number of rows in the menu.
+	 */
 	sizeY:Null<Int>,
 	
+	/**
+	 * Whether the menu should wrap around the X axis.
+	 */
 	wrapX:Null<Bool>,
+	
+	/**
+	 * Whether the menu should wrap around the Y axis.
+	 */
 	wrapY:Null<Bool>,
 	
+	/**
+	 * Arbitrary callback meant to be called when the menu is entered.
+	 */
 	onEnter:Null<()->Void>,
+	
+	/**
+	 * Arbitrary callback meant to be called when the menu is exited.
+	 * 
+	 * Should typically be called within `onBack`, but depends on the context.
+	 */
 	onExit:Null<()->Void>,
+	
+	/**
+	 * Called when the back button is pressed.
+	 */
 	onBack:Null<()->Void>,
 	
+	/**
+	 * Called every frame.
+	 * 
+	 * @param elapsed The time elapsed since the last frame in seconds.
+	 */
 	onUpdate:Null<(Float)->Void>
 }
 
+/**
+ * Module for creating `Menu` objects.
+ */
 class Menu extends ScriptedModule {
 	public function new() {
-		super("cynlib.menu.Menu", -2147483648);
+		super("cynlib.menu.Menu", -2147483647);
 	}
 	
+	/**
+	 * Creates a new `Menu` object.
+	 * 
+	 * Make sure the total number of items is equal to `sizeX * sizeY`!
+	 * 
+	 * @param data The `MenuData` to initialize the menu with.
+	 * @return The new `Menu` object.
+	 */
 	public function new_Menu(?data:MenuData):Menu {
 		if (data == null) {
 			data = {};

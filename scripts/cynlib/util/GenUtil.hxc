@@ -11,6 +11,9 @@ import flixel.tweens.FlxEase;
 import funkin.modding.module.ScriptedModule;
 import funkin.util.ReflectUtil;
 
+/**
+ * General utility module.
+ */
 class GenUtil extends ScriptedModule {
 	public function new() {
 		super("cynlib.util.GenUtil", -2147483648);
@@ -20,6 +23,13 @@ class GenUtil extends ScriptedModule {
 		active = false;
 	}
 	
+	/**
+	 * Because HScript kinda breaks when try/catch blocks fail, this function is a workaround.
+	 * Unfortunately, it's not perfect, since the catch value isn't accessible, but it's better than nothing.
+	 * 
+	 * @param func The function to try.
+	 * @param caught The function to run if the try block fails.
+	 */
 	public function tryBlock(func:()->Void, ?caught:()->Void):Void {
 		var block:()->Null<Bool> = function():Null<Bool> {
 			var success:Bool = true;
@@ -34,6 +44,14 @@ class GenUtil extends ScriptedModule {
 		if (block() != true && caught != null) {caught();}
 	}
 	
+	/**
+	 * Merges two anonymous objects together.
+	 * 
+	 * @param a The base object.
+	 * @param b The object to merge into the base object, overwriting any conflicting keys.
+	 * @param exclusive If `true`, only keys in the base object will be kept. Otherwise, merging is additive.
+	 * @return A new object with the merged values.
+	 */
 	public function objectMerge(a:Dynamic, b:Dynamic, exclusive:Bool = false):Dynamic {
 		var ret:Dynamic = Objects.clone(a);
 		
@@ -55,6 +73,12 @@ class GenUtil extends ScriptedModule {
 		return ret;
 	}
 	
+	/**
+	 * Gets all paths of an anonymous object.
+	 * 
+	 * @param obj The object to get paths from.
+	 * @return An array of paths.
+	 */
 	public function objectPaths(obj:Dynamic):Array<String> {
 		var ret:Array<String> = [];
 		
@@ -72,10 +96,15 @@ class GenUtil extends ScriptedModule {
 		return ret;
 	}
 	
+	/**
+	 * Shuffles an array using the Fisher-Yates method.
+	 * 
+	 * @param array The array to shuffle.
+	 * @return A clone of `array` with its elements shuffled.
+	 */
 	public function shuffleArray(array:Array<Dynamic>):Array<Dynamic> {
 		var ret:Array<Dynamic> = array.copy();
 		
-		// fisher-yates method
 		for (i in 0 ... ret.length - 1) {
 			var j:Int = FlxG.random.int(i, ret.length - 1);
 			var temp:Dynamic = ret[i];
@@ -86,6 +115,9 @@ class GenUtil extends ScriptedModule {
 		return ret;
 	}
 	
+	/**
+	 * A map of `FlxEase`s used by `getEase`.
+	 */
 	public var eases:Dynamic = {
 		quadin: FlxEase.quadIn,                 quadout: FlxEase.quadOut,                 quadinout: FlxEase.quadInOut,
 		cubein: FlxEase.cubeIn,                 cubeout: FlxEase.cubeOut,                 cubeinout: FlxEase.cubeInOut,
@@ -102,6 +134,12 @@ class GenUtil extends ScriptedModule {
 		linear: FlxEase.linear
 	};
 	
+	/**
+	 * Gets a `FlxEase` by name.
+	 * 
+	 * @param name The name of the `FlxEase` to get. Defaults to "linear".
+	 * @return The `FlxEase` with the given name, linear if not found.
+	 */
 	public function getEase(?name:String):Dynamic {
 		if (name == null) {
 			name = "linear";

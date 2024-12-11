@@ -1,0 +1,181 @@
+package cynlib.song;
+
+import funkin.modding.module.ScriptedModule;
+import funkin.play.PlayState;
+import funkin.play.song.Song;
+import funkin.play.stage.Stage;
+
+/**
+ * Variables to be shared across song-related scripts.
+ */
+typedef SongVars = {
+	/**
+	 * Variables that persist between songs.
+	 */
+	persist:Dynamic,
+	
+	/**
+	 * The current stage.
+	 */
+	stage:Null<Stage>,
+	
+	/**
+	 * The current song.
+	 */
+	song:Null<Song>
+	
+	// Add your own variables to `songVars` during the callbacks.
+}
+
+/**
+ * Callbacks to help set up your song-related scripts.
+ */
+typedef SongCallbacks = {
+	/**
+	 * Array of callbacks to be called immediately after `PlayState.create`.
+	 * Does not clear between songs.
+	 * 
+	 * Mainly meant for modules, and runs before `playStateCreatePre` and `playStateCreatePost`.
+	 */
+	persist:Array<(SongVars)->Void>,
+	
+	/**
+	 * Array of callbacks to be called after `persist`.
+	 * Useful for setting up your stage-specific and song-specific variables and adding them to `songVars`.
+	 */
+	pre:Array<(SongVars)->Void>,
+	
+	/**
+	 * Array of callbacks to be called after `pre`.
+	 * Useful for logic that would require cross-script interaction via `songVars`, like sprite z-ordering.
+	 */
+	post:Array<(SongVars)->Void>
+}
+
+/**
+ * Module to make song scripting easier by sharing variables.
+ * 
+ * Example:
+ * ```haxe
+ * // stage script
+ * package exampleMod.stages;
+ * 
+ * import funkin.graphics.FunkinSprite;
+ * import funkin.modding.module.ModuleHandler;
+ * import funkin.play.stage.ScriptedStage;
+ * 
+ * class ExampleStage extends ScriptedStage {
+ *     public function new() {
+ *         super("exampleStage");
+ *     }
+ *     
+ *     private var exampleSprite1:FunkinSprite = null;
+ *     
+ *     override public function onCreate(event:ScriptEvent):Void {
+ *         ModuleHandler.getModule("cynlib.song.SongHelper").scriptGet("callbacks").get("pre").push(function(vars:Dynamic):Void {
+ *             exampleSprite1 = new FunkinSprite().makeSolidColor(256, 256, 0xffaabbcc);
+ *             vars.exampleSprite1 = exampleSprite1;
+ *             
+ *             add(exampleSprite1);
+ *             exampleSprite1.zIndex = 100;
+ *             refresh();
+ *         });
+ *     }
+ * }
+ * 
+ * // song script
+ * package exampleMod.songs;
+ * 
+ * import funkin.graphics.FunkinSprite;
+ * import funkin.modding.module.ModuleHandler;
+ * import funkin.play.song.ScriptedSong;
+ * 
+ * class ExampleSong extends ScriptedSong {
+ *     public function new() {
+ *         super("exampleSong");
+ *     }
+ *     
+ *     private var songVars:Dynamic = null;
+ *     
+ *     private var exampleSprite2:FunkinSprite = null;
+ *     
+ *     override public function onCreate(event:ScriptEvent):Void {
+ *         ModuleHandler.getModule("cynlib.song.SongHelper").scriptGet("callbacks").get("pre").push(function(vars:Dynamic):Void {
+ *             exampleSprite2 = new FunkinSprite().makeSolidColor(256, 256, 0xffccbbaa);
+ *             vars.exampleSprite2 = exampleSprite2;
+ *         });
+ *         
+ *         ModuleHandler.getModule("cynlib.song.SongHelper").scriptGet("callbacks").get("post").push(function(vars:Dynamic):Void {
+ *             vars.stage.add(exampleSprite2);
+ *             exampleSprite2.zIndex = vars.exampleSprite1.zIndex + 1;
+ *             vars.stage.refresh();
+ *             
+ *             songVars = vars;
+ *         });
+ *     }
+ *     
+ *     override public function onUpdate(event:UpdateScriptEvent):Void {
+ *         if (songVars != null) {
+ *             songVars.exampleSprite1.angle += 0.1 * event.elapsed;
+ *         }
+ *     }
+ * }
+ * ```
+ */
+class SongHelper extends ScriptedModule {
+	public function new() {
+		super("cynlib.song.SongHelper", -2147483648);
+	}
+	
+	/**
+	 * Variables to be shared across song-related scripts.
+	 * 
+	 * Are also passed to the callbacks.
+	 */
+	public var songVars:SongVars = {
+		persist: {},
+		stage: null,
+		song: null
+	};
+	
+	/**
+	 * Callbacks to help set up your song-related scripts.
+	 */
+	public var callbacks:SongCallbacks = {
+		persist: new Array(),
+		pre: new Array(),
+		post: new Array()
+	};
+	
+	override public function onStateChangeEnd(event:StateChangeScriptEvent):Void {
+		if (Std.isOfType(event.targetState), PlayState) {
+			songVars.song = PlayState.instance.currentSong;
+			songVars.stage = PlayState.instance.currentStage;
+			
+			for (callback in callbacks.persist) {
+				callback(songVars);
+			}
+			
+			for (callback in callbacks.pre) {
+				callback(songVars);
+			}
+			
+			for (callback in callbacks.post) {
+				callback(songVars);
+			}
+		} else {
+			reset();
+		}
+	}
+	
+	private function reset():Void {
+		songVars = {
+			persist: songVars.persist,
+			stage: null,
+			song: null
+		};
+		
+		callbacks.pre.resize(0);
+		callbacks.post.resize(0);
+	}
+}

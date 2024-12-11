@@ -4,29 +4,70 @@ import flixel.util.FlxTimer;
 
 import funkin.modding.module.ScriptedModule;
 
+/**
+ * An object representing a timed event.
+ */
 typedef SequenceEvent = {
+	/**
+	 * The time in seconds at which the event should occur (not considering `mult`).
+	 */
 	time:Float,
+	
+	/**
+	 * The function to call when the event occurs.
+	 */
 	callback:()->Void
 }
 
+/**
+ * An object representing a timed sequence of events using `FlxTimer`s.
+ */
 typedef Sequence = {
 	timers:Array<FlxTimer>,
 	
 	running:Bool,
+	
+	/**
+	 * Gets whether the sequence is currently running.
+	 */
 	get_running:()->Bool,
+	
+	/**
+	 * Pauses or resumes the sequence.
+	 * 
+	 * @param v	Whether the sequence should be running.
+	 * @return Whether the sequence is running.
+	 */
 	set_running:(Bool)->Bool,
 	
+	/**
+	 * Gets whether the sequence has completed or been destroyed.
+	 */
 	completed:()->Bool,
 	
 	exists:Bool,
+	
+	/**
+	 * Destroys the sequence and all of its timers.
+	 */
 	destroy:()->Void
 }
 
+/**
+ * Module for creating `Sequence` objects based on `FlxTimer`s.
+ */
 class Sequence extends ScriptedModule {
 	public function new() {
 		super("cynlib.sequence.Sequence", -2147483648);
 	}
 	
+	/**
+	 * Creates a new `Sequence` object.
+	 * 
+	 * @param events The events to occur in the sequence.
+	 * @param mult The multiplier for the time of each event.
+	 * @param start Whether the sequence should start running immediately.
+	 */
 	public function new_Sequence(events:Array<SequenceEvent>, mult:Float = 1, start:Bool = true):Sequence {
 		var obj:Dynamic = {
 			timers: new Array(),

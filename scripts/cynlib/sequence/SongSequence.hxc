@@ -3,33 +3,74 @@ package cynlib.sequence;
 import funkin.Conductor;
 import funkin.modding.module.ScriptedModule;
 
+/**
+ * An object representing a timed event.
+ */
 typedef SequenceEvent = {
+	/**
+	 * The time in seconds at which the event should occur (not considering `mult`).
+	 */
 	time:Float,
+	
+	/**
+	 * The function to call when the event occurs.
+	 */
 	callback:()->Void
 }
 
+/**
+ * An object representing a timed sequence of events using `FlxTimer`s.
+ */
 typedef SongSequence = {
 	timers:Array<SequenceEvent>,
 	
 	startTime:Float,
 	
 	running:Bool,
+	
+	/**
+	 * Gets whether the sequence is currently running.
+	 */
 	get_running:()->Bool,
+	
+	/**
+	 * Pauses or resumes the sequence.
+	 * 
+	 * @param v	Whether the sequence should be running.
+	 * @return Whether the sequence is running.
+	 */
 	set_running:(Bool)->Bool,
 	
+	/**
+	 * Gets whether the sequence has completed or been destroyed.
+	 */
 	completed:()->Bool,
 	
 	update:()->Void,
 	
 	exists:Bool,
+	
+	/**
+	 * Destroys the sequence.
+	 */
 	destroy:()->Void
 }
 
+/**
+ * Module for creating `SongSequence` objects based on `Conductor` time.
+ */
 class SongSequence extends ScriptedModule {
 	public function new() {
 		super("cynlib.sequence.SongSequence", -2147483648);
 	}
 	
+	/**
+	 * Creates a new `SongSequence` object.
+	 * 
+	 * @param events The events to occur in the sequence.
+	 * @param mult The multiplier for the time of each event.
+	 * @param start Whether the sequence should start running immediately.
+	 */
 	public function new_SongSequence(events:Array<SequenceEvent>, mult:Float = 1, start:Bool = true):SongSequence {
 		var obj:Dynamic = {
 			timers: new Array(),

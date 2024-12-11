@@ -13,35 +13,101 @@ import funkin.modding.module.ScriptedModule;
 import funkin.play.PlayState;
 import funkin.util.Constants;
 
+/**
+ * A versatile camera controller object.
+ */
 typedef Neocam = {
+	/**
+	 * The target camera to control.
+	 */
 	parent:FlxCamera,
 	
+	/**
+	 * Whether the controller should affect the camera.
+	 * 
+	 * The controller still updates in the background when disabled.
+	 */
 	enabled:Bool,
+	
 	paused:Bool,
+	
+	/**
+	 * Whether the camera should follow the mouse.
+	 */
 	debugMode:Bool,
 	
+	/**
+	 * Whether the camera is a game camera (affected by song events).
+	 */
 	gameCamera:Bool,
 	
+	/**
+	 * Object holding `x` and `y` `MovingVal`s for the camera's position.
+	 */
 	position:Dynamic,
+	
+	/**
+	 * Object holding `x` and `y` shaking `MovingVal`s for the camera's position.
+	 */
 	positionShake:Dynamic,
 	
+	/**
+	 * Object holding `x` and `y` `MovingVal`s for offsetting the camera's position.
+	 */
 	offset:Dynamic,
+	
+	/**
+	 * Object holding `x` and `y` shaking `MovingVal`s for offsetting the camera's position.
+	 */
 	offsetShake:Dynamic,
 	
+	/**
+	 * `MovingVal` for the camera's zoom.
+	 */
 	zoom:Dynamic,
+	
+	/**
+	 * Shaking `MovingVal` for the camera's zoom.
+	 */
 	zoomShake:Dynamic,
 	
+	/**
+	 * `MovingVal` for the camera's alpha.
+	 */
 	alpha:Dynamic,
 	
+	/**
+	 * The magnitude of the position offset when a character hits a note, in pixels.
+	 */
 	noteOffsetScale:Float,
+	
 	noteOffset:Dynamic,
 	
+	/**
+	 * Helper function map for doing things with the camera.
+	 * 
+	 * Example:
+	 * ```haxe
+	 * 
+	 * ```
+	 */
 	targets:StringMap<()->Void>,
 	
+	/**
+	 * Add to the camera zoom `cur` value.
+	 */
 	bump:(Float)->Void,
+	
 	bumpPattern:IntMap<Float>,
 	bumpPatternStart:Int,
 	bumpPatternLength:Int,
+	
+	/**
+	 * Set a bump pattern for use during songs.
+	 * 
+	 * @param pattern A map of step indices to zoom bump amounts.
+	 * @param length The length of the pattern in steps before looping. If not provided, it's the highest index of `pattern`
+	 */
 	setBumpPattern:(IntMap<Float>, Int)->Void,
 	
 	onNoteHit:(HitNoteScriptEvent)->Void,
@@ -54,22 +120,52 @@ typedef Neocam = {
 	onUpdate:(Float)->Void,
 	
 	exists:Bool,
+	
+	/**
+	 * Destroy the camera controller.
+	 */
 	destroy:()->Void
 }
 
+/**
+ * Data for creating a `Neocam` object.
+ */
 typedef NeocamData = {
+	/**
+	 * The target camera to control.
+	 */
 	parent:FlxCamera,
 	
+	/**
+	 * Whether the camera is a game camera (affected by song events).
+	 */
 	gameCamera:Bool,
 	
+	/**
+	 * The magnitude of the position offset when a character hits a note, in pixels.
+	 */
 	noteOffsetScale:Float
 }
 
+/**
+ * A module for controlling cameras.
+ * 
+ * Example:
+ * ```haxe
+ * 
+ * ```
+ */
 class Neocam extends ScriptedModule {
 	public function new() {
-		super("cynlib.neocam.Neocam", -2147483648);
+		super("cynlib.neocam.Neocam", -2147483646);
 	}
 	
+	/**
+	 * Creates a new `Neocam` camera controller object.
+	 * 
+	 * @param data The `NeocamData` to initialize the controller with.
+	 * @return The new `Neocam` object.
+	 */
 	public function new_Neocam(?data:NeocamData):Neocam {
 		if (data == null) {
 			data = {};
@@ -363,34 +459,38 @@ class Neocam extends ScriptedModule {
 			obj.noteOffset.x.update(elapsed);
 			obj.noteOffset.y.update(elapsed);
 			
-			if (obj.debugMode) {
-				obj.parent.scroll.x = -FlxG.mouse.getScreenPosition().x * 2;
-				obj.parent.scroll.y = -FlxG.mouse.getScreenPosition().y * 2;
-			} else {
-				obj.parent.scroll.x = obj.position.x.applied + obj.positionShake.x.applied;
-				obj.parent.scroll.y = obj.position.y.applied + obj.positionShake.y.applied;
-			}
-			
-			obj.parent.scroll.x += obj.offset.x.applied + obj.offsetShake.x.applied + obj.noteOffset.x.applied;
-			obj.parent.scroll.y += obj.offset.y.applied + obj.offsetShake.y.applied + obj.noteOffset.y.applied;
-			
-			obj.parent.zoom = obj.zoom.applied + obj.zoomShake.applied;
-			
-			obj.parent.alpha = obj.alpha.applied;
-			
-			if (PlayState.instance != null) {
-				if (obj.gameCamera) {
-					PlayState.instance.cameraFollowPoint.x = obj.parent.scroll.x;
-					PlayState.instance.cameraFollowPoint.y = obj.parent.scroll.y;
-					PlayState.instance.currentCameraZoom = obj.parent.zoom;
+			if (obj.enabled) {
+				if (obj.debugMode) {
+					obj.parent.scroll.x = -FlxG.mouse.getScreenPosition().x * 2;
+					obj.parent.scroll.y = -FlxG.mouse.getScreenPosition().y * 2;
+				} else {
+					obj.parent.scroll.x = obj.position.x.applied + obj.positionShake.x.applied;
+					obj.parent.scroll.y = obj.position.y.applied + obj.positionShake.y.applied;
 				}
 				
-				PlayState.instance.cancelAllCameraTweens();
+				obj.parent.scroll.x += obj.offset.x.applied + obj.offsetShake.x.applied + obj.noteOffset.x.applied;
+				obj.parent.scroll.y += obj.offset.y.applied + obj.offsetShake.y.applied + obj.noteOffset.y.applied;
 				
-				FlxTween.globalManager.cancelTweensOf(obj.parent);
-				FlxTween.globalManager.cancelTweensOf(obj.parent.scroll);
-				obj.parent.followLerp = 0;
-				obj.parent.target = null;
+				obj.parent.zoom = obj.zoom.applied + obj.zoomShake.applied;
+				
+				obj.parent.alpha = obj.alpha.applied;
+			}
+			
+			if (PlayState.instance != null) {
+				if (obj.enabled) {
+					if (obj.gameCamera) {
+						PlayState.instance.cameraFollowPoint.x = obj.parent.scroll.x;
+						PlayState.instance.cameraFollowPoint.y = obj.parent.scroll.y;
+						PlayState.instance.currentCameraZoom = obj.parent.zoom;
+					}
+					
+					PlayState.instance.cancelAllCameraTweens();
+					
+					FlxTween.globalManager.cancelTweensOf(obj.parent);
+					FlxTween.globalManager.cancelTweensOf(obj.parent.scroll);
+					obj.parent.followLerp = 0;
+					obj.parent.target = null;
+				}
 				
 				var paused:Bool = PlayState.instance.get_isGamePaused() || obj.paused;
 				
