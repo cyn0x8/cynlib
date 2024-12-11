@@ -148,7 +148,7 @@ class SongHelper extends ScriptedModule {
 	};
 	
 	override public function onStateChangeEnd(event:StateChangeScriptEvent):Void {
-		if (Std.isOfType(event.targetState), PlayState) {
+		if (Std.isOfType(event.targetState, PlayState)) {
 			songVars.song = PlayState.instance.currentSong;
 			songVars.stage = PlayState.instance.currentStage;
 			
