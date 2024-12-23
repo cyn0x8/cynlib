@@ -2,11 +2,11 @@
 
 library for fnf modding
 
-## overview
+## Overview
 
-for any mods that require it, just drag `cynlib.zip` into your mods folder
+If any mods you'd like to use require it, just drag `cynlib.zip` into your mods folder.
 
-you can find the releases [here](https://github.com/cyn0x8/cynlib/releases)
+You can find the releases [here](https://github.com/cyn0x8/cynlib/releases).
 
 > [!note]
-> documentation is contained within the scripts
+> Documentation is contained within the scripts!

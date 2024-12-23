@@ -22,10 +22,19 @@ typedef SequenceEvent = {
  * An object representing a timed sequence of events using `FlxTimer`s.
  */
 typedef SongSequence = {
+	/**
+	 * Internal array of timed events for the sequence.
+	 */
 	timers:Array<SequenceEvent>,
 	
+	/**
+	 * Internal variable for the relative start time of the sequence.
+	 */
 	startTime:Float,
 	
+	/**
+	 * Internal flag for whether the sequence is running.
+	 */
 	running:Bool,
 	
 	/**
@@ -46,8 +55,14 @@ typedef SongSequence = {
 	 */
 	completed:()->Bool,
 	
+	/**
+	 * Internal callback for updating the sequence, respecting `Conductor`.
+	 */
 	update:()->Void,
 	
+	/**
+	 * Internal flag for whether the sequence object hasn't completed/been destroyed.
+	 */
 	exists:Bool,
 	
 	/**
@@ -80,9 +95,7 @@ class SongSequence extends ScriptedModule {
 			
 			running: false,
 			
-			toRemove: new Array(),
-			
-			exists: true
+			exists: false
 		};
 		
 		obj.get_running = function():Bool {
@@ -121,22 +134,15 @@ class SongSequence extends ScriptedModule {
 			}
 			
 			var songPosition:Float = Conductor.get_instance().songPosition;
-			if (songPosition < obj.curTime) { // went back in time??
+			if (songPosition < obj.curTime) {
 				obj.destroy();
 				return;
 			}
 			
 			obj.curTime = songPosition;
 			
-			for (timer in obj.timers) {
-				if (obj.curTime > timer.time + obj.startTime) {
-					timer.callback();
-					obj.toRemove.push(timer);
-				}
-			}
-			
-			while (obj.toRemove.length > 0) {
-				obj.timers.remove(obj.toRemove.pop());
+			while (obj.timers.length > 0 && obj.curTime > obj.timers[0].time + obj.startTime) {
+				obj.timers.shift().callback();
 			}
 			
 			if (obj.completed()) {
@@ -145,10 +151,6 @@ class SongSequence extends ScriptedModule {
 		};
 		
 		obj.destroy = function():Void {
-			if (!obj.exists) {
-				return;
-			}
-			
 			while (!obj.completed()) {
 				obj.timers.pop();
 			}
@@ -156,20 +158,26 @@ class SongSequence extends ScriptedModule {
 			obj.running = false;
 			
 			alive.remove(obj);
-			
-			toDestroy.remove(obj.destroy);
+			obj.exists = false;
 		};
+		
+		if (events.length == 0) {
+			return obj;
+		}
 		
 		for (event in events) {
 			event.time *= mult * 1000;
 			obj.timers.push(event);
 		}
 		
+		obj.timers.sort(function(a:SequenceEvent, b:SequenceEvent):Int {
+			return a.time - b.time;
+		});
+		
 		obj.set_running(start);
 		
 		alive.push(obj);
-		
-		toDestroy.push(obj.destroy);
+		obj.exists = true;
 		
 		return obj;
 	}
@@ -178,13 +186,6 @@ class SongSequence extends ScriptedModule {
 	override public function onUpdate(event:UpdateScriptEvent):Void {
 		for (obj in alive) {
 			obj.update();
-		}
-	}
-	
-	private var toDestroy:Array<()->Void> = new Array();
-	override public function onDestroy(event:ScriptEvent):Void {
-		while (toDestroy.length > 0) {
-			toDestroy.pop()();
 		}
 	}
 }

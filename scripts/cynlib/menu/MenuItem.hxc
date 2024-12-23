@@ -29,7 +29,7 @@ typedef MenuItem = {
 	autoNavigate:Bool,
 	
 	/**
-	 * Whether input is enabled for the item.
+	 * Whether the item can be interacted with.
 	 */
 	enabled:Bool,
 	

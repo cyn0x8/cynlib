@@ -12,6 +12,8 @@ import funkin.util.MathUtil;
 
 /**
  * An object that represents a value that can be manipulated in various ways.
+ * 
+ * Used in `Neocam` for camera properties, but this class is generic and can be used however you like.
  */
 typedef MovingVal = {
 	/**
@@ -91,6 +93,9 @@ typedef MovingVal = {
 	 */
 	set_fps:(Float)->Float,
 	
+	/**
+	 * Internal clock for updating `applied`.
+	 */
 	tick:Float,
 	
 	/**
@@ -119,6 +124,9 @@ typedef MovingVal = {
 	 */
 	cancelTween:()->Void,
 	
+	/**
+	 * Internal tween object for tweening `target`.
+	 */
 	activeTween:Null<NumTween>,
 	
 	/**
@@ -133,6 +141,9 @@ typedef MovingVal = {
 	 */
 	paused:Bool,
 	
+	/**
+	 * Internal flag for whether the object should shake `applied`.
+	 */
 	shake:Bool,
 	
 	/**
@@ -142,6 +153,9 @@ typedef MovingVal = {
 	 */
 	update:(Float)->Void,
 	
+	/**
+	 * Internal flag for whether the object exists.
+	 */
 	exists:Bool,
 	
 	/**
@@ -156,26 +170,31 @@ typedef MovingVal = {
 typedef MovingValData = {
 	/**
 	 * The initial `cur` value.
+	 * Defaults to `0`.
 	 */
 	cur:Null<Float>,
 	
 	/**
 	 * The initial `target` value.
+	 * Defaults to `cur`.
 	 */
 	target:Null<Float>,
 	
 	/**
 	 * The initial `applied` value.
+	 * Defaults to `cur`.
 	 */
 	applied:Null<Float>,
 	
 	/**
 	 * The initial `halfLife` value.
+	 * Defaults to `1`.
 	 */
 	halfLife:Null<Float>,
 	
 	/**
 	 * The initial `fps` value.
+	 * Defaults to `1000`.
 	 */
 	fps:Null<Float>,
 	
@@ -197,6 +216,53 @@ typedef MovingValData = {
 
 /**
  * Module for creating `MovingVal` objects.
+ * 
+ * Example:
+ * ```haxe
+ * package exampleMod;
+ * 
+ * import funkin.modding.module.ModuleHandler;
+ * import funkin.modding.module.ScriptedModule;
+ * 
+ * class ExampleModule extends ScriptedModule {
+ *     public function new() {
+ *         super("exampleMod.ExampleModule");
+ *     }
+ *     
+ *     private var exampleValue:Dynamic = null;
+ *     override public function onCreate(event:ScriptEvent):Void {
+ *         exampleValue = ModuleHandler.getModule("cynlib.neocam.MovingVal").scriptCall("new_MovingVal", [{
+ *             halfLife: 0.5,
+ *             fps: 10
+ *         }]);
+ *         
+ *         ModuleHandler.getModule("cynlib.sequence.Sequence").scriptCall("new_Sequence", [[
+ *             {time: 0.5, callback: function():Void {
+ *                 exampleValue.tween(null, 100, 2, "cubeout");
+ *             },
+ *             
+ *             {time: 3, callback: function():Void {
+ *                 exampleValue.tween(null, 0, 2, "cubeout");
+ *             },
+ *             
+ *             {time: 5.5, callback: function():Void {
+ *                 exampleValue.destroy();
+ *                 exampleValue = null;
+ *             }
+ *         ]]);
+ *     }
+ *     
+ *     override public function onUpdate(event:UpdateScriptEvent):Void {
+ *         if (exampleValue == null) {
+ *             return;
+ *         }
+ *         
+ *         exampleValue.update(event.elapsed);
+ *         
+ *         trace(exampleValue.applied);
+ *     }
+ * }
+ * ```
  */
 class MovingVal extends ScriptedModule {
 	public function new() {

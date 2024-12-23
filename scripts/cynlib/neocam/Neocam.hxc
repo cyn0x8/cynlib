@@ -29,6 +29,9 @@ typedef Neocam = {
 	 */
 	enabled:Bool,
 	
+	/**
+	 * Internal flag for whether the controller values should freeze.
+	 */
 	paused:Bool,
 	
 	/**
@@ -81,14 +84,37 @@ typedef Neocam = {
 	 */
 	noteOffsetScale:Float,
 	
+	/**
+	 * Internal `MovingVal` for the note offset.
+	 */
 	noteOffset:Dynamic,
 	
 	/**
-	 * Helper function map for doing things with the camera.
+	 * Helper function map for doing preset things with the camera.
 	 * 
 	 * Example:
 	 * ```haxe
+	 * ncGame.targets.set("focusSky", function():Void {
+	 *    ncGame.position.x.tween(null, 0, 1, "cubeout");
+	 *    ncGame.position.y.tween(null, -400, 2, "quartout");
+	 *    ncGame.zoom.tween(null, 0.75, 2, "quartout");
+	 * });
 	 * 
+	 * ncGame.targets.set("explosionShake", function():Void {
+	 *     ncGame.positionShake.x.set_fps(24);
+	 *     ncGame.positionShake.x.set_halfLife(0.5);
+	 *     ncGame.positionShake.x.snap(10, true);
+	 *     ncGame.positionShake.x.set_target(0);
+	 *     
+	 *     ncGame.positionShake.y.set_fps(24);
+	 *     ncGame.positionShake.y.set_halfLife(0.5);
+	 *     ncGame.positionShake.y.snap(10, true);
+	 *     ncGame.positionShake.y.set_target(0);
+	 * });
+	 * 
+	 * // Later...
+	 * ncGame.targets.get("focusSky")();
+	 * ncGame.targets.get("explosionShake")();
 	 * ```
 	 */
 	targets:StringMap<()->Void>,
@@ -98,8 +124,20 @@ typedef Neocam = {
 	 */
 	bump:(Float)->Void,
 	
+	/**
+	 * The current step bump pattern, a map of step indices to bump amounts.
+	 */
 	bumpPattern:IntMap<Float>,
+	
+	/**
+	 * Internal value for the starting step of the bump pattern, relative to the song.
+	 */
 	bumpPatternStart:Int,
+	
+	/**
+	 * Internal value for the length of the bump pattern in steps before it loops.
+	 * Default is the highest index of `bumpPattern`, unless otherwise specified in `setBumpPattern`.
+	 */
 	bumpPatternLength:Int,
 	
 	/**
@@ -110,15 +148,34 @@ typedef Neocam = {
 	 */
 	setBumpPattern:(IntMap<Float>, Int)->Void,
 	
+	/**
+	 * Internal callback for the note offset when a note is hit.
+	 */
 	onNoteHit:(HitNoteScriptEvent)->Void,
+	
+	/**
+	 * Internal callback for resetting the note offset when a note is missed.
+	 */
 	onNoteMiss:()->Void,
 	
+	/**
+	 * Internal callback for step-related events like camera bump.
+	 */
 	onStepHit:(SongTimeScriptEvent)->Void,
 	
+	/**
+	 * Internal callback to replicate the behavior of camera song events with the controller.
+	 */
 	onSongEvent:(SongEventScriptEvent)->Void,
 	
+	/**
+	 * Internal callback for updating the camera controller.
+	 */
 	onUpdate:(Float)->Void,
 	
+	/**
+	 * Internal flag for whether the object exists.
+	 */
 	exists:Bool,
 	
 	/**
@@ -137,6 +194,18 @@ typedef NeocamData = {
 	parent:FlxCamera,
 	
 	/**
+	 * Optional starting position for the camera.
+	 * Defaults to the parent camera's current position, or the origin if not provided.
+	 */
+	startPosition:Null<FlxPoint>,
+	
+	/**
+	 * Optional starting zoom for the camera.
+	 * Defaults to the parent camera's current zoom, or `1` if not provided.
+	 */
+	startZoom:Null<Float>,
+	
+	/**
 	 * Whether the camera is a game camera (affected by song events).
 	 */
 	gameCamera:Bool,
@@ -152,7 +221,49 @@ typedef NeocamData = {
  * 
  * Example:
  * ```haxe
+ * package exampleMod.states;
  * 
+ * import flixel.FlxG;
+ * 
+ * import funkin.graphics.FunkinCamera;
+ * import funkin.modding.base.ScriptedMusicBeatState;
+ * import funkin.modding.module.ModuleHandler;
+ * 
+ * class exampleState extends ScriptedMusicBeatState {
+ *     private var camera:FunkinCamera = null;
+ *     private var controller:Dynamic = null;
+ *     
+ *     override public function create():Void {
+ *         super.create();
+ *         
+ *         camera = new FunkinCamera("exampleMod: exampleState camera", 0, 0, 1280, 720, 1);
+ *         FlxG.cameras.add(camera, true);
+ *         
+ *         controller = ModuleHandler.getModule("cynlib.neocam.Neocam").scriptCall("new_Neocam", [{
+ *             parent: camera
+ *         }]);
+ *         
+ *         controller.position.x.set_halfLife(0.2);
+ *         controller.position.y.set_halfLife(0.2);
+ *     }
+ *     
+ *     private var tick:Float = 0;
+ *     override public function update(elapsed:Float):Void {
+ *         super.update(elapsed);
+ *         
+ *         tick += elapsed;
+ *         
+ *         controller.position.x.set_target(Math.cos(tick) * 50);
+ *         controller.position.y.set_target(Math.sin(tick) * 50);
+ *     }
+ *     
+ *     override public function destroy():Void {
+ *         super.destroy();
+ *         
+ *         FlxG.cameras.remove(camera);
+ *         camera.destroy();
+ *     }
+ * }
  * ```
  */
 class Neocam extends ScriptedModule {
@@ -181,8 +292,13 @@ class Neocam extends ScriptedModule {
 			gameCamera: data.gameCamera == null ? false : data.gameCamera,
 			
 			position: {
-				x: ModuleHandler.getModule("cynlib.neocam.MovingVal").scriptCall("new_MovingVal"),
-				y: ModuleHandler.getModule("cynlib.neocam.MovingVal").scriptCall("new_MovingVal")
+				x: ModuleHandler.getModule("cynlib.neocam.MovingVal").scriptCall("new_MovingVal", [{
+					cur: data.startPosition == null ? (data.parent == null ? 0 : data.parent.scroll.x) : data.startPosition.x
+				}]),
+				
+				y: ModuleHandler.getModule("cynlib.neocam.MovingVal").scriptCall("new_MovingVal", [{
+					cur: data.startPosition == null ? (data.parent == null ? 0 : data.parent.scroll.y) : data.startPosition.y
+				}])
 			},
 			
 			positionShake: {
@@ -200,7 +316,10 @@ class Neocam extends ScriptedModule {
 				y: ModuleHandler.getModule("cynlib.neocam.MovingVal").scriptCall("new_MovingVal", [{shake: true}])
 			},
 			
-			zoom: ModuleHandler.getModule("cynlib.neocam.MovingVal").scriptCall("new_MovingVal", [{cur: 1}]),
+			zoom: ModuleHandler.getModule("cynlib.neocam.MovingVal").scriptCall("new_MovingVal", [{
+				cur: data.startZoom == null ? (data.parent == null ? 1 : data.parent.zoom) : data.startZoom
+			}]),
+			
 			zoomShake: ModuleHandler.getModule("cynlib.neocam.MovingVal").scriptCall("new_MovingVal", [{shake: true}]),
 			
 			alpha: ModuleHandler.getModule("cynlib.neocam.MovingVal").scriptCall("new_MovingVal", [{cur: 1}]),
@@ -215,10 +334,12 @@ class Neocam extends ScriptedModule {
 			
 			bumpPattern: new IntMap(),
 			bumpPatternStart: 0,
-			bumpPatternLength: 0,
+			bumpPatternLength: 4,
 			
 			exists: true
 		};
+		
+		obj.bumpPattern.set(0, (Constants.DEFAULT_BOP_INTENSITY - 1.0) * (obj.gameCamera ? 1 : 2));
 		
 		obj.bump = function(amount:Float):Void {
 			if (!obj.exists) {
@@ -378,11 +499,7 @@ class Neocam extends ScriptedModule {
 							intensity = 1.0;
 						}
 						
-						if (obj.gameCamera) {
-							intensity = (Constants.DEFAULT_BOP_INTENSITY - 1.0) * intensity;
-						} else {
-							intensity = (Constants.DEFAULT_BOP_INTENSITY - 1.0) * intensity * 2;
-						}
+						intensity = (Constants.DEFAULT_BOP_INTENSITY - 1.0) * intensity * (obj.gameCamera ? 1 : 2);
 						
 						var bumpPattern:IntMap<Float> = new IntMap();
 						bumpPattern.set(0, intensity);
@@ -545,6 +662,20 @@ class Neocam extends ScriptedModule {
 			
 			exists = false;
 		};
+		
+		if (data.startPosition != null) {
+			obj.position.x.snap(data.startPosition.x, true);
+			obj.position.y.snap(data.startPosition.y, true);
+		} else if (data.parent != null) {
+			obj.position.x.snap(data.parent.scroll.x, true);
+			obj.position.y.snap(data.parent.scroll.y, true);
+		}
+		
+		if (data.startZoom != null) {
+			obj.zoom.snap(data.startZoom, true);
+		} else if (data.parent != null) {
+			obj.zoom.snap(data.parent.zoom, true);
+		}
 		
 		if (!FlxG.signals.postUpdate.has(obj.onUpdate)) {
 			FlxG.signals.postUpdate.add(obj.onUpdate);

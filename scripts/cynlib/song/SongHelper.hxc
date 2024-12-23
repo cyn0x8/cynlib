@@ -57,7 +57,7 @@ typedef SongCallbacks = {
  * 
  * Example:
  * ```haxe
- * // stage script
+ * // Example stage script that creates a sprite and adds it to the stage.
  * package exampleMod.stages;
  * 
  * import funkin.graphics.FunkinSprite;
@@ -79,11 +79,13 @@ typedef SongCallbacks = {
  *             add(exampleSprite1);
  *             exampleSprite1.zIndex = 100;
  *             refresh();
+ *             
+ *             vars.inExampleStage = true;
  *         });
  *     }
  * }
  * 
- * // song script
+ * // Example song script that creates a second sprite and uses the first sprite from the stage script.
  * package exampleMod.songs;
  * 
  * import funkin.graphics.FunkinSprite;
@@ -101,7 +103,7 @@ typedef SongCallbacks = {
  *     
  *     override public function onCreate(event:ScriptEvent):Void {
  *         ModuleHandler.getModule("cynlib.song.SongHelper").scriptGet("callbacks").get("pre").push(function(vars:Dynamic):Void {
- *             exampleSprite2 = new FunkinSprite().makeSolidColor(256, 256, 0xffccbbaa);
+ *             exampleSprite2 = new FunkinSprite().makeSolidColor(512, 512, 0xffccbbaa);
  *             vars.exampleSprite2 = exampleSprite2;
  *         });
  *         
@@ -117,6 +119,58 @@ typedef SongCallbacks = {
  *     override public function onUpdate(event:UpdateScriptEvent):Void {
  *         if (songVars != null) {
  *             songVars.exampleSprite1.angle += 0.1 * event.elapsed;
+ *         }
+ *     }
+ * }
+ * 
+ * // Example module script that checks for ExampleStage, and hides the opponent strums/notes if so.
+ * package exampleMod;
+ * 
+ * import funkin.modding.module.ModuleHandler;
+ * import funkin.modding.module.ScriptedModule;
+ * import funkin.play.PlayState;
+ * 
+ * class ExampleModule extends ScriptedModule {
+ *     public function new() {
+ *         super("exampleMod.ExampleModule");
+ *     }
+ *     
+ *     private var inExampleStage:Bool = false;
+ *     
+ *     override public function onCreate(event:ScriptEvent):Void {
+ *         bind();
+ *         hook();
+ *     }
+ *     
+ *     private function hook():Void {
+ *         ModuleHandler.getModule("cynlib.reloader.Reloader").scriptGet("reloadPre").set("exampleMod.exampleModule", {
+ *             callback: "onReload"
+ *         });
+ *     }
+ *     
+ *     public function onReload():Void {
+ *         bind();
+ *         hook();
+ *     }
+ *     
+ *     private function bind():Void {
+ *         ModuleHandler.getModule("cynlib.song.SongHelper").scriptGet("callbacks").persist.push(function(vars:Dynamic):Void {
+ *             inExampleStage = songVars.inExampleStage == true;
+ *             if (inExampleStage != true) {
+ *                 return;
+ *             }
+ *             
+ *             PlayState.instance.opponentStrumline.visible = false;
+ *         });
+ *     }
+ *     
+ *     public override function onNoteIncoming(event:NoteScriptEvent):Void {
+ *         if (!inExampleStage) {
+ *             return;
+ *         }
+ *         
+ *         if (event.note.noteData < 4) {
+ *             event.note.visible = false;
  *         }
  *     }
  * }

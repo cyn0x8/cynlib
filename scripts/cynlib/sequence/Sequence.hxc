@@ -23,8 +23,14 @@ typedef SequenceEvent = {
  * An object representing a timed sequence of events using `FlxTimer`s.
  */
 typedef Sequence = {
+	/**
+	 * Internal array of timers for the sequence, each representing a timed event.
+	 */
 	timers:Array<FlxTimer>,
 	
+	/**
+	 * Internal flag for whether the sequence is running.
+	 */
 	running:Bool,
 	
 	/**
@@ -45,6 +51,9 @@ typedef Sequence = {
 	 */
 	completed:()->Bool,
 	
+	/**
+	 * Internal flag for whether the sequence object hasn't completed/been destroyed.
+	 */
 	exists:Bool,
 	
 	/**
@@ -72,9 +81,9 @@ class Sequence extends ScriptedModule {
 		var obj:Dynamic = {
 			timers: new Array(),
 			
-			running: true,
+			running: false,
 			
-			exists: true
+			exists: false
 		};
 		
 		obj.get_running = function():Bool {
@@ -108,10 +117,6 @@ class Sequence extends ScriptedModule {
 		};
 		
 		obj.destroy = function():Void {
-			if (!obj.exists) {
-				return;
-			}
-			
 			while (!obj.completed()) {
 				var timer:FlxTimer = obj.timers.pop();
 				timer.cancel();
@@ -121,9 +126,13 @@ class Sequence extends ScriptedModule {
 			obj.running = false;
 			
 			toDestroy.remove(obj.destroy);
-			
 			obj.exists = false;
 		};
+		
+		if (events.length == 0) {
+			obj.destroy();
+			return obj;
+		}
 		
 		for (event in events) {
 			obj.timers.push(new FlxTimer().start(
@@ -142,6 +151,7 @@ class Sequence extends ScriptedModule {
 		obj.set_running(start);
 		
 		toDestroy.push(obj.destroy);
+		obj.exists = true;
 		
 		return obj;
 	}
