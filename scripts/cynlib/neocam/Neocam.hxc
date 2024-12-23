@@ -334,7 +334,7 @@ class Neocam extends ScriptedModule {
 			
 			bumpPattern: new IntMap(),
 			bumpPatternStart: 0,
-			bumpPatternLength: 4,
+			bumpPatternLength: 16,
 			
 			exists: true
 		};
