@@ -135,17 +135,17 @@ class Sequence extends ScriptedModule {
 		}
 		
 		for (event in events) {
-			obj.timers.push(new FlxTimer().start(
-				event.time * mult,
-				function(timer:FlxTimer):Void {
-					event.callback();
-					obj.timers.remove(timer);
-					
-					if (obj.completed()) {
-						obj.destroy();
-					}
+			var timer_persist:FlxTimer = new FlxTimer();
+			timer_persist.start(event.time * mult, function(timer:FlxTimer):Void {
+				event.callback();
+				obj.timers.remove(timer_persist);
+				
+				if (obj.completed()) {
+					obj.destroy();
 				}
-			));
+			});
+			
+			obj.timers.push(timer_persist);
 		}
 		
 		obj.set_running(start);
