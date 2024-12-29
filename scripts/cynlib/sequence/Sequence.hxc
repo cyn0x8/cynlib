@@ -20,13 +20,20 @@ typedef SequenceEvent = {
 }
 
 /**
- * An object representing a timed sequence of events using `FlxTimer`s.
+ * An object representing a timed sequence of events.
+ * 
+ * Does not use `FlxTimer`s due to issues with hscript.
  */
 typedef Sequence = {
 	/**
-	 * Internal array of timers for the sequence, each representing a timed event.
+	 * Internal array of timed events for the sequence.
 	 */
-	timers:Array<FlxTimer>,
+	events:Array<FlxTimer>,
+	
+	/**
+	 * Internal time counter for the sequence.
+	 */
+	curTime:Float,
 	
 	/**
 	 * Internal flag for whether the sequence is running.
@@ -52,18 +59,25 @@ typedef Sequence = {
 	completed:()->Bool,
 	
 	/**
+	 * Internal update function for the sequence.
+	 * 
+	 * Call this with your own `elapsed` value to "skip" forward or backward in time for this sequence.
+	 */
+	update:(Float)->Void,
+	
+	/**
 	 * Internal flag for whether the sequence object hasn't completed/been destroyed.
 	 */
 	exists:Bool,
 	
 	/**
-	 * Destroys the sequence and all of its timers.
+	 * Destroys the sequence.
 	 */
 	destroy:()->Void
 }
 
 /**
- * Module for creating `Sequence` objects based on `FlxTimer`s.
+ * Module for creating `Sequence` objects.
  */
 class Sequence extends ScriptedModule {
 	public function new() {
@@ -79,7 +93,9 @@ class Sequence extends ScriptedModule {
 	 */
 	public function new_Sequence(events:Array<SequenceEvent>, mult:Float = 1, start:Bool = true):Sequence {
 		var obj:Dynamic = {
-			timers: new Array(),
+			events: new Array(),
+			
+			curTime: 0,
 			
 			running: false,
 			
@@ -96,10 +112,6 @@ class Sequence extends ScriptedModule {
 				return false;
 			}
 			
-			for (timer in obj.timers) {
-				timer.active = v;
-			}
-			
 			return obj.running = v;
 		};
 		
@@ -108,7 +120,7 @@ class Sequence extends ScriptedModule {
 				return true;
 			}
 			
-			var completed:Bool = obj.timers.length == 0;
+			var completed:Bool = obj.events.length == 0;
 			if (completed) {
 				obj.running = false;
 			}
@@ -116,16 +128,28 @@ class Sequence extends ScriptedModule {
 			return completed;
 		};
 		
-		obj.destroy = function():Void {
-			while (!obj.completed()) {
-				var timer:FlxTimer = obj.timers.pop();
-				timer.cancel();
-				timer.destroy();
+		obj.update = function(elapsed:Float):Void {
+			if (!obj.exists || !obj.get_running()) {
+				return;
 			}
+			
+			obj.curTime += elapsed;
+			
+			while (obj.events.length > 0 && obj.curTime > obj.events[0].time) {
+				obj.events.shift().callback();
+			}
+			
+			if (obj.completed()) {
+				obj.destroy();
+			}
+		}
+		
+		obj.destroy = function():Void {
+			obj.events.resize(0);
 			
 			obj.running = false;
 			
-			toDestroy.remove(obj.destroy);
+			alive.remove(obj);
 			obj.exists = false;
 		};
 		
@@ -135,31 +159,26 @@ class Sequence extends ScriptedModule {
 		}
 		
 		for (event in events) {
-			var timer_persist:FlxTimer = new FlxTimer();
-			timer_persist.start(event.time * mult, function(timer:FlxTimer):Void {
-				event.callback();
-				obj.timers.remove(timer_persist);
-				
-				if (obj.completed()) {
-					obj.destroy();
-				}
-			});
-			
-			obj.timers.push(timer_persist);
+			event.time *= mult;
+			obj.events.push(event);
 		}
 		
+		obj.events.sort(function(a:SequenceEvent, b:SequenceEvent):Int {
+			return a.time - b.time;
+		});
+		
+		obj.exists = true;
 		obj.set_running(start);
 		
-		toDestroy.push(obj.destroy);
-		obj.exists = true;
+		alive.push(obj);
 		
 		return obj;
 	}
 	
-	private var toDestroy:Array<()->Void> = new Array();
-	override public function onDestroy(event:ScriptEvent):Void {
-		while (toDestroy.length > 0) {
-			toDestroy.pop()();
+	private var alive:Array<SongSequence> = new Array();
+	override public function onUpdate(event:UpdateScriptEvent):Void {
+		for (obj in alive) {
+			obj.update(event.elapsed);
 		}
 	}
 }

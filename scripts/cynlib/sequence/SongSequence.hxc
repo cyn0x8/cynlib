@@ -25,7 +25,7 @@ typedef SongSequence = {
 	/**
 	 * Internal array of timed events for the sequence.
 	 */
-	timers:Array<SequenceEvent>,
+	events:Array<SequenceEvent>,
 	
 	/**
 	 * Internal variable for the relative start time of the sequence.
@@ -88,7 +88,7 @@ class SongSequence extends ScriptedModule {
 	 */
 	public function new_SongSequence(events:Array<SequenceEvent>, mult:Float = 1, start:Bool = true):SongSequence {
 		var obj:Dynamic = {
-			timers: new Array(),
+			events: new Array(),
 			
 			curTime: Math.NEGATIVE_INFINITY,
 			startTime: 0,
@@ -120,7 +120,7 @@ class SongSequence extends ScriptedModule {
 				return true;
 			}
 			
-			var completed:Bool = obj.timers.length == 0;
+			var completed:Bool = obj.events.length == 0;
 			if (completed) {
 				obj.running = false;
 			}
@@ -141,8 +141,8 @@ class SongSequence extends ScriptedModule {
 			
 			obj.curTime = songPosition;
 			
-			while (obj.timers.length > 0 && obj.curTime > obj.timers[0].time + obj.startTime) {
-				obj.timers.shift().callback();
+			while (obj.events.length > 0 && obj.curTime > obj.events[0].time + obj.startTime) {
+				obj.events.shift().callback();
 			}
 			
 			if (obj.completed()) {
@@ -151,9 +151,7 @@ class SongSequence extends ScriptedModule {
 		};
 		
 		obj.destroy = function():Void {
-			while (!obj.completed()) {
-				obj.timers.pop();
-			}
+			obj.events.resize(0);
 			
 			obj.running = false;
 			
@@ -162,22 +160,23 @@ class SongSequence extends ScriptedModule {
 		};
 		
 		if (events.length == 0) {
+			obj.destroy();
 			return obj;
 		}
 		
 		for (event in events) {
 			event.time *= mult * 1000;
-			obj.timers.push(event);
+			obj.events.push(event);
 		}
 		
-		obj.timers.sort(function(a:SequenceEvent, b:SequenceEvent):Int {
+		obj.events.sort(function(a:SequenceEvent, b:SequenceEvent):Int {
 			return a.time - b.time;
 		});
 		
+		obj.exists = true;
 		obj.set_running(start);
 		
 		alive.push(obj);
-		obj.exists = true;
 		
 		return obj;
 	}
