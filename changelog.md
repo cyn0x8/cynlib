@@ -7,7 +7,8 @@
 - `MenuItems` now respect their `enabled` property (whoops)
 - `Neocam` can now have a `startPosition` and `startZoom` on creation
 - `Neocam` now uses the 1-measure bump pattern instead of none by default
-- changed `FlxTimer`s to use `Sequence`
+- `Sequence` no longer uses `FlxTimer`s (hscript issues)
+- changed internal usages of `FlxTimer` to use `Sequence`
 - removed some redundant code and fixed a few stability issues
 
 ## v3.0.0
