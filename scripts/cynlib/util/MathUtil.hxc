@@ -1,7 +1,5 @@
 package cynlib.util;
 
-import flixel.math.FlxMath;
-
 import funkin.modding.module.ScriptedModule;
 import funkin.util.MathUtil;
 
