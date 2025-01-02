@@ -1,7 +1,5 @@
 package cynlib.sequence;
 
-import flixel.util.FlxTimer;
-
 import funkin.modding.module.ScriptedModule;
 
 /**
@@ -21,14 +19,12 @@ typedef SequenceEvent = {
 
 /**
  * An object representing a timed sequence of events.
- * 
- * Does not use `FlxTimer`s due to issues with hscript.
  */
 typedef Sequence = {
 	/**
 	 * Internal array of timed events for the sequence.
 	 */
-	events:Array<FlxTimer>,
+	events:Array<SequenceEvent>,
 	
 	/**
 	 * Internal time counter for the sequence.

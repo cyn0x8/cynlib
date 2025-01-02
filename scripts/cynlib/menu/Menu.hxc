@@ -3,10 +3,10 @@ package cynlib.menu;
 import flixel.FlxG;
 import flixel.FlxBasic;
 import flixel.math.FlxMath;
-import flixel.util.FlxTimer;
 
 import funkin.PlayerSettings;
 import funkin.input.Controls;
+import funkin.modding.module.ModuleHandler;
 import funkin.modding.module.ScriptedModule;
 
 /**
@@ -157,9 +157,9 @@ typedef Menu = {
 	debounce:(Float)->Void,
 	
 	/**
-	 * Internal timer for debounce.
+	 * Internal sequence for debounce.
 	 */
-	debounceTimer:Null<FlxTimer>,
+	debounceSequence:Null<Dynamic>,
 	
 	/**
 	 * Updates the menu.
@@ -407,15 +407,17 @@ class Menu extends ScriptedModule {
 			
 			obj.enabled = false;
 			
-			if (obj.debounceTimer != null) {
-				obj.debounceTimer._timeCounter = 0;
-				obj.debounceTimer.time = Math.max(obj.debounceTimer.time, duration);
+			if (obj.debounceSequence != null) {
+				obj.debounceSequence.curTime = 0;
+				obj.debounceSequence.events[0].time = Math.max(obj.debounceSequence.events[0].time, duration);
 			} else {
-				obj.debounceTimer = new FlxTimer().start(duration, function():Void {
-					obj.enabled = true;
-					
-					obj.debounceTimer = null;
-				});
+				obj.debounceSequence = ModuleHandler.getModule("cynlib.sequence.Sequence").scriptCall("new_Sequence", [[
+					{time: duration, callback: function():Void {
+						obj.enabled = true;
+						
+						obj.debounceSequence = null;
+					}}
+				]]);
 			}
 		};
 		
@@ -566,10 +568,9 @@ class Menu extends ScriptedModule {
 				return;
 			}
 			
-			if (obj.debounceTimer != null) {
-				obj.debounceTimer.cancel();
-				obj.debounceTimer.destroy();
-				obj.debounceTimer = null;
+			if (obj.debounceSequence != null) {
+				obj.debounceSequence.destroy();
+				obj.debounceSequence = null;
 			}
 			
 			toDestroy.remove(obj.destroy);

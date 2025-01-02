@@ -19,7 +19,7 @@ typedef SequenceEvent = {
 }
 
 /**
- * An object representing a timed sequence of events using `FlxTimer`s.
+ * An object representing a timed sequence of events based on `Conductor` time.
  */
 typedef SongSequence = {
 	/**
