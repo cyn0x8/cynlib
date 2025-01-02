@@ -69,18 +69,22 @@ typedef SongCallbacks = {
  *         super("exampleStage");
  *     }
  *     
+ *     private var songVars:Dynamic = null;
+ *     
  *     private var exampleSprite1:FunkinSprite = null;
  *     
  *     override public function onCreate(event:ScriptEvent):Void {
  *         ModuleHandler.getModule("cynlib.song.SongHelper").scriptGet("callbacks").get("pre").push(function(vars:Dynamic):Void {
+ *             songVars = vars;
+ *             
  *             exampleSprite1 = new FunkinSprite().makeSolidColor(256, 256, 0xffaabbcc);
- *             vars.exampleSprite1 = exampleSprite1;
+ *             songVars.exampleSprite1 = exampleSprite1;
  *             
  *             add(exampleSprite1);
  *             exampleSprite1.zIndex = 100;
  *             refresh();
  *             
- *             vars.inExampleStage = true;
+ *             songVars.inExampleStage = true;
  *         });
  *     }
  * }
@@ -103,16 +107,16 @@ typedef SongCallbacks = {
  *     
  *     override public function onCreate(event:ScriptEvent):Void {
  *         ModuleHandler.getModule("cynlib.song.SongHelper").scriptGet("callbacks").get("pre").push(function(vars:Dynamic):Void {
+ *             songVars = vars;            
+ *             
  *             exampleSprite2 = new FunkinSprite().makeSolidColor(512, 512, 0xffccbbaa);
- *             vars.exampleSprite2 = exampleSprite2;
+ *             songVars.exampleSprite2 = exampleSprite2;
  *         });
  *         
  *         ModuleHandler.getModule("cynlib.song.SongHelper").scriptGet("callbacks").get("post").push(function(vars:Dynamic):Void {
- *             vars.stage.add(exampleSprite2);
- *             exampleSprite2.zIndex = vars.exampleSprite1.zIndex + 1;
- *             vars.stage.refresh();
- *             
- *             songVars = vars;
+ *             songVars.stage.add(exampleSprite2);
+ *             exampleSprite2.zIndex = songVars.exampleSprite1.zIndex + 1;
+ *             songVars.stage.refresh();
  *         });
  *     }
  *     
@@ -219,6 +223,25 @@ class SongHelper extends ScriptedModule {
 			}
 		} else {
 			reset();
+		}
+	}
+	
+	override public function onSubStateOpenEnd(event:SubStateScriptEvent):Void {
+		if (Std.isOfType(event.targetState, PlayState) && !PlayState.instance.isMinimalMode) {
+			songVars.song = PlayState.instance.currentSong;
+			songVars.stage = PlayState.instance.currentStage;
+			
+			for (callback in callbacks.persist) {
+				callback(songVars);
+			}
+			
+			for (callback in callbacks.pre) {
+				callback(songVars);
+			}
+			
+			for (callback in callbacks.post) {
+				callback(songVars);
+			}
 		}
 	}
 	

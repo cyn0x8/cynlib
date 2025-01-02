@@ -8,6 +8,7 @@
 - `Neocam` can now have a `startPosition` and `startZoom` on creation
 - `Neocam` now uses the 1-measure bump pattern instead of none by default
 - `Sequence` no longer uses `FlxTimer`s (hscript issues)
+- `SongHelper` now calls callbacks when playtesting during charting (not minimal mode)
 - changed internal usages of `FlxTimer` to use `Sequence`
 - removed some redundant code and fixed a few stability issues
 
