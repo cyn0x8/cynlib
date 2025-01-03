@@ -25,7 +25,7 @@
 - changed to package based modules/classes
 - small stability fixes with reloader sorting
 - added `smoothLerpDecay` and `smoothLerpPrecision` to `MathUtil` ([credit to Freya Holmer](https://twitter.com/FreyaHolmer/status/1757918211679650262))
-  - temporary until https://github.com/FunkinCrew/Funkin/pull/3617 gets merged
+  - temporary until <https://github.com/FunkinCrew/Funkin/pull/3617> gets merged
 - removed `remap` from `MathUtil` (can use `FlxMath.remapToRange` and `FlxMath.bound`)
 
 ## v1.0.0
