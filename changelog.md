@@ -7,6 +7,7 @@
 - `MenuItems` now respect their `enabled` property (whoops)
 - `Neocam` can now have a `startPosition` and `startZoom` on creation
 - `Neocam` now uses the 1-measure bump pattern instead of none by default
+- added optional relative bump/bump patterns to `Neocam`
 - `Sequence` no longer uses `FlxTimer`s (hscript issues)
 - `SongHelper` now calls callbacks when playtesting during charting (not minimal mode)
 - changed internal usages of `FlxTimer` to use `Sequence`
