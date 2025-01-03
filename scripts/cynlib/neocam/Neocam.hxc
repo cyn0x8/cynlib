@@ -35,11 +35,6 @@ typedef Neocam = {
 	paused:Bool,
 	
 	/**
-	 * Whether the camera should follow the mouse.
-	 */
-	debugMode:Bool,
-	
-	/**
 	 * Whether the camera is a game camera (affected by song events).
 	 */
 	gameCamera:Bool,
@@ -83,6 +78,11 @@ typedef Neocam = {
 	 * The magnitude of the position offset when a character hits a note, in pixels.
 	 */
 	noteOffsetScale:Float,
+	
+	/**
+	 * Whether the note offset takes into account the camera's zoom.
+	 */
+	noteOffsetRelative:Bool,
 	
 	/**
 	 * Internal `MovingVal` for the note offset.
@@ -226,7 +226,18 @@ typedef NeocamData = {
 	/**
 	 * The magnitude of the position offset when a character hits a note, in pixels.
 	 */
-	noteOffsetScale:Float
+	noteOffsetScale:Float,
+	
+	/**
+	 * Whether the note offset takes into account the camera's zoom.
+	 */
+	noteOffsetRelative:Bool,
+	
+	/**
+	 * Optional starting note offset for the camera.
+	 * Defaults to the basic 1-measure pattern used in the game.
+	 */
+	startBumpPattern:Null<IntMap>
 }
 
 /**
@@ -300,7 +311,6 @@ class Neocam extends ScriptedModule {
 			
 			enabled: true,
 			paused: false,
-			debugMode: false,
 			
 			gameCamera: data.gameCamera == null ? false : data.gameCamera,
 			
@@ -338,6 +348,7 @@ class Neocam extends ScriptedModule {
 			alpha: ModuleHandler.getModule("cynlib.neocam.MovingVal").scriptCall("new_MovingVal", [{cur: 1}]),
 			
 			noteOffsetScale: data.noteOffsetScale == null ? 0 : data.noteOffsetScale,
+			noteOffsetRelative: data.noteOffsetRelative == null ? false : data.noteOffsetRelative,
 			noteOffset: {
 				x: ModuleHandler.getModule("cynlib.neocam.MovingVal").scriptCall("new_MovingVal"),
 				y: ModuleHandler.getModule("cynlib.neocam.MovingVal").scriptCall("new_MovingVal")
@@ -345,14 +356,18 @@ class Neocam extends ScriptedModule {
 			
 			targets: new StringMap(),
 			
-			bumpPattern: new IntMap(),
+			bumpPattern: data.startBumpPattern == null ? null : data.startBumpPattern,
 			bumpPatternStart: 0,
 			bumpPatternLength: 16,
+			bumpPatternRelative: false,
 			
 			exists: true
 		};
 		
-		obj.bumpPattern.set(0, (Constants.DEFAULT_BOP_INTENSITY - 1.0) * (obj.gameCamera ? 1 : 2));
+		if (obj.bumpPattern == null) {
+			obj.bumpPattern = new IntMap();
+			obj.bumpPattern.set(0, (Constants.DEFAULT_BOP_INTENSITY - 1.0) * (obj.gameCamera ? 1 : 2));
+		}
 		
 		obj.bump = function(amount:Float, relative:Bool = false):Void {
 			if (!obj.exists) {
@@ -592,16 +607,11 @@ class Neocam extends ScriptedModule {
 			obj.noteOffset.y.update(elapsed);
 			
 			if (obj.enabled) {
-				if (obj.debugMode) {
-					obj.parent.scroll.x = -FlxG.mouse.getScreenPosition().x * 2;
-					obj.parent.scroll.y = -FlxG.mouse.getScreenPosition().y * 2;
-				} else {
-					obj.parent.scroll.x = obj.position.x.applied + obj.positionShake.x.applied;
-					obj.parent.scroll.y = obj.position.y.applied + obj.positionShake.y.applied;
-				}
+				obj.parent.scroll.x = obj.position.x.applied + obj.positionShake.x.applied;
+				obj.parent.scroll.y = obj.position.y.applied + obj.positionShake.y.applied;
 				
-				obj.parent.scroll.x += obj.offset.x.applied + obj.offsetShake.x.applied + obj.noteOffset.x.applied;
-				obj.parent.scroll.y += obj.offset.y.applied + obj.offsetShake.y.applied + obj.noteOffset.y.applied;
+				obj.parent.scroll.x += obj.offset.x.applied + obj.offsetShake.x.applied + obj.noteOffset.x.applied / (obj.noteOffsetRelative ? obj.parent.zoom : 1);
+				obj.parent.scroll.y += obj.offset.y.applied + obj.offsetShake.y.applied + obj.noteOffset.y.applied / (obj.noteOffsetRelative ? obj.parent.zoom : 1);
 				
 				obj.parent.zoom = obj.zoom.applied + obj.zoomShake.applied;
 				
