@@ -80,7 +80,7 @@ class GenUtil extends ScriptedModule {
 	 * @return An array of paths.
 	 */
 	public function objectPaths(obj:Dynamic):Array<String> {
-		var ret:Array<String> = [];
+		var ret:Array<String> = new Array();
 		
 		for (key in ReflectUtil.getAnonymousFieldsOf(obj)) {
 			ret.push(key);
