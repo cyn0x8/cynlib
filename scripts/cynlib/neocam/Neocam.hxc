@@ -121,6 +121,9 @@ typedef Neocam = {
 	
 	/**
 	 * Add to the camera zoom `cur` value.
+	 * 
+	 * @param amount The amount to add to the zoom, giving a "bump" effect.
+	 * @param relative Whether to add the amount as a multiplier `cur * (1 + amount)` or as an addition `cur + amount`.
 	 */
 	bump:(Float, Bool)->Void,
 	
@@ -146,7 +149,7 @@ typedef Neocam = {
 	bumpPatternRelative:Bool,
 	
 	/**
-	 * Set a bump pattern for use during songs.
+	 * Set a looping camera bump pattern for use during songs, based on steps.
 	 * 
 	 * @param pattern A map of step indices to zoom bump amounts.
 	 * @param length The length of the pattern in steps before looping. If not provided, it's the highest index of `pattern`
@@ -176,6 +179,10 @@ typedef Neocam = {
 	
 	/**
 	 * Internal callback for updating the camera controller.
+	 * 
+	 * Added to the `FlxG.signals.postUpdate` signal, so be very sure to destroy the controller when it's no longer needed or else
+	 * you'll have an unreferenced controller wasting resources... This is attempted to be mitigated by this module's `onDestroy` function,
+	 * but you should still try to dispose of the controller properly.
 	 */
 	onUpdate:(Float)->Void,
 	
@@ -185,7 +192,7 @@ typedef Neocam = {
 	exists:Bool,
 	
 	/**
-	 * Destroy the camera controller.
+	 * Destroy the camera controller and remove its update signal.
 	 */
 	destroy:()->Void
 }
@@ -212,7 +219,7 @@ typedef NeocamData = {
 	startZoom:Null<Float>,
 	
 	/**
-	 * Whether the camera is a game camera (affected by song events).
+	 * Whether the camera is a game camera (should be affected by song events).
 	 */
 	gameCamera:Bool,
 	
