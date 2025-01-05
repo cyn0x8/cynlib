@@ -431,7 +431,7 @@ class Neocam extends ScriptedModule {
 				return;
 			}
 			
-			obj.bump(obj.bumpPattern.get((event.step - obj.bumpPatternStart) % obj.bumpPatternLength), obj.bumpPatternRelative);
+			obj.bump(obj.bumpPattern.get((event.step - obj.bumpPatternStart) % Math.max(1, obj.bumpPatternLength)), obj.bumpPatternRelative);
 		};
 		
 		obj.onSongEvent = function(event:SongEventScriptEvent):Void {
