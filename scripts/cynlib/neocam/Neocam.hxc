@@ -153,6 +153,7 @@ typedef Neocam = {
 	 * 
 	 * @param pattern A map of step indices to zoom bump amounts.
 	 * @param length The length of the pattern in steps before looping. If not provided, it's the highest index of `pattern`
+	 * @param start Optionally change the relative starting step of the pattern.
 	 * @param relative Whether to flag the pattern as relative to the camera zoom.
 	 */
 	setBumpPattern:(IntMap<Float>, Int, Bool)->Void,
@@ -377,7 +378,7 @@ class Neocam extends ScriptedModule {
 			obj.zoom.set_cur(relative ? obj.zoom.cur * (1 + amount) : obj.zoom.cur + amount);
 		};
 		
-		obj.setBumpPattern = function(pattern:IntMap<Float>, length:Int = 0, relative:Bool = false):Void {
+		obj.setBumpPattern = function(pattern:IntMap<Float>, length:Int = 0, ?start:Int, relative:Bool = false):Void {
 			if (!obj.exists) {
 				return;
 			}
@@ -390,6 +391,10 @@ class Neocam extends ScriptedModule {
 			}
 			
 			obj.bumpPatternLength = lastStep;
+			
+			if (start != null) {
+				obj.bumpPatternStart = start;
+			}
 			
 			obj.bumpPatternRelative = relative;
 		};
