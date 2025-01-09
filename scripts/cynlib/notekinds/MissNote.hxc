@@ -1,0 +1,27 @@
+// WIP !!!
+
+package cynlib.notekinds;
+
+import funkin.play.PlayState;
+import funkin.play.character.BaseCharacter;
+import funkin.play.notes.notekind.ScriptedNoteKind;
+
+class MissNote extends ScriptedNoteKind {
+	public function new() {
+		super("Miss Note", "A note that cannot be hit. Optionally plays a miss animation if on opponent side.");
+	}
+	
+	public var playMissAnimation:Bool = true;
+	
+	override public function onNoteHit(event:HitNoteScriptEvent):Void {
+		if (event.note.get_kind() != "Miss Note") {
+			return;
+		}
+		
+		if (!event.note.noteData.getMustHitNote() && playMissAnimation) {
+			PlayState.instance.currentStage.getDad().playSingAnimation(event.note.direction, true);
+		}
+		
+		event.cancelEvent();
+	}
+}

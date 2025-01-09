@@ -1,0 +1,28 @@
+// WIP !!!
+
+package cynlib.notekinds;
+
+import funkin.play.PlayState;
+import funkin.play.character.BaseCharacter;
+import funkin.play.notes.notekind.ScriptedNoteKind;
+
+class NoAnimationNote extends ScriptedNoteKind {
+	public function new() {
+		super("No Animation", "Does not play a singing animation when hit.");
+	}
+	
+	override public function onNoteHit(event:HitNoteScriptEvent):Void {
+		if (event.note.noteData.get_kind() != "No Animation") {
+			return;
+		}
+		
+		var targetCharacter:BaseCharacter = null;
+		if (event.note.noteData.getMustHitNote()) {
+			targetCharacter = PlayState.instance.currentStage.getBoyfriend();
+		} else {
+			targetCharacter = PlayState.instance.currentStage.getDad();
+		}
+		
+		
+	}
+}

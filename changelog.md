@@ -1,33 +1,53 @@
 # Changelog
 
-## v3.1.0
+## v4.0.0
 
-- improved and added more documentation
-- `Menu` now has support for mouse-based items, separate from keyboard-based ones
-- `MenuItems` now respect their `enabled` property (whoops)
-- `Neocam` can now have a `startPosition`, `startZoom`, and `startBumpPattern` on creation
-- `Neocam` now uses the 1-measure bump pattern instead of none by default
-- added optional relative bump/bump patterns and relative note offset to `Neocam`
-- removed `debugMode` from `Neocam`
-- `Sequence` no longer uses `FlxTimer`s (hscript issues)
-- `SongHelper` now calls callbacks when playtesting during charting (not minimal mode)
-- changed internal usages of `FlxTimer` to use `Sequence`
-- removed some redundant code and fixed a few stability issues
+- Retroactively improved GitHub changelog.
+- Improved and added to documentation.
+- Linked example videos in the GitHub readme.
+- Removed some redundant code and fixed a few stability issues.
+- Replace internal usages of `FlxTimer` with `Sequence`.
+- Added notekinds:
+  - `cynlib.notekinds.MissNote`
+  - `cynlib.notekinds.NoAnimationNote`
+- Added shaders:
+  - `cynlib.shaders.AberrationShader`
+  - `cynlib.shaders.SaturationShader`
+  - `cynlib.shaders.VignetteShader`
+- Changes to `cynlib.menu.Menu`:
+  - Added support for mouse-based items, separate from keyboard-based ones. See internal documentation for more info.
+- Changes to `cynlib.menu.MenuItem`:
+  - Now respects `enabled` property (whoops).
+- Changes to `cynlib.neocam.Neocam`:
+  - Can now have a `startPosition`, `startZoom`, and `startBumpPattern` on creation.
+  - Now uses the 1-measure bump pattern instead of none by default.
+  - Added optional relative bump/bump patterns and relative note offset.
+  - Removed `debugMode`.
+- Changes to `cynlib.sequence.Sequence`;
+  - No longer uses `FlxTimer`s (having hscript issues).
+- Changes to `cynlib.song.SongHelper`:
+  - Changed `PlayState` creation callback names.
+  - Added step-based callback integer map for song events
+  - Added `stageReset` callback array.
+  - Now calls callbacks when playtesting during charting (not minimal mode).
 
 ## v3.0.0
 
-- simplified `songHelper` (previously `songManager`)
-- added documentation
-- adjusted module priorities
+- Added partial documentation.
+- Adjusted module priorities.
+- Changes to `cynlib.song.SongManager`:
+  - Renamed to `SongHelper` and simplified.
 
 ## v2.0.0
 
-- changed to package based modules/classes
-- small stability fixes with reloader sorting
-- added `smoothLerpDecay` and `smoothLerpPrecision` to `MathUtil` ([credit to Freya Holmer](https://twitter.com/FreyaHolmer/status/1757918211679650262))
-  - temporary until <https://github.com/FunkinCrew/Funkin/pull/3617> gets merged
-- removed `remap` from `MathUtil` (can use `FlxMath.remapToRange` and `FlxMath.bound`)
+- Changed to package based modules/classes.
+- Changes to `cynlib.reloader.Reloader`
+  - Small stability fixes with sorting.
+- Changes to `cynlib.util.MathUtil`:
+  - Added `smoothLerpDecay` and `smoothLerpPrecision` ([credit to Freya Holmer](https://twitter.com/FreyaHolmer/status/1757918211679650262)).
+    - Temporary until <https://github.com/FunkinCrew/Funkin/pull/3617> gets merged.
+  - Removed `remap` (can use `FlxMath.remapToRange` and `FlxMath.bound` instead).
 
 ## v1.0.0
 
-initial
+- Initial release.

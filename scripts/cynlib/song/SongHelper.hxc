@@ -28,7 +28,7 @@ typedef SongVars = {
 }
 
 /**
- * Callbacks to help set up your song-related scripts.
+ * Various callbacks to help set up your song-related scripts.
  */
 typedef SongCallbacks = {
 	/**
@@ -37,19 +37,31 @@ typedef SongCallbacks = {
 	 * 
 	 * Mainly meant for modules, and runs before `playStateCreatePre` and `playStateCreatePost`.
 	 */
-	persist:Array<(SongVars)->Void>,
+	createPersist:Array<(SongVars)->Void>,
 	
 	/**
-	 * Array of callbacks to be called after `persist`.
+	 * Array of callbacks to be called after `createPersist`.
 	 * Useful for setting up your stage-specific and song-specific variables and adding them to `songVars`.
 	 */
-	pre:Array<(SongVars)->Void>,
+	createPre:Array<(SongVars)->Void>,
 	
 	/**
-	 * Array of callbacks to be called after `pre`.
+	 * Array of callbacks to be called after `createPre`.
 	 * Useful for logic that would require cross-script interaction via `songVars`, like sprite z-ordering.
 	 */
-	post:Array<(SongVars)->Void>
+	createPost:Array<(SongVars)->Void>,
+	
+	/**
+	 * Map of custom callbacks to be called at specific steps in the song.
+	 * Make sure to set this before the song starts.
+	 */
+	events:IntMap<(SongVars)->Void>,
+	
+	/**
+	 * Array of callbacks to be called when the stage is reset.
+	 * Your stage script must call `SongHelper.onStageReset` to trigger these.
+	 */
+	stageReset:Array<(SongVars)->Void>
 }
 
 /**
@@ -57,8 +69,13 @@ typedef SongCallbacks = {
  * 
  * Example:
  * ```haxe
- * // Example stage script that creates a sprite and adds it to the stage.
+ * // Example stage script that creates a sprite and adds it to the stage, as well as some events.
  * package exampleMod.stages;
+ * 
+ * import haxe.ds.IntMap;
+ * 
+ * import flixel.tweens.FlxEase;
+ * import flixel.tweens.FlxTween;
  * 
  * import funkin.graphics.FunkinSprite;
  * import funkin.modding.module.ModuleHandler;
@@ -74,7 +91,7 @@ typedef SongCallbacks = {
  *     private var exampleSprite1:FunkinSprite = null;
  *     
  *     override public function onCreate(event:ScriptEvent):Void {
- *         ModuleHandler.getModule("cynlib.song.SongHelper").scriptGet("callbacks").get("pre").push(function(vars:Dynamic):Void {
+ *         ModuleHandler.getModule("cynlib.song.SongHelper").scriptGet("callbacks").get("createPre").push(function(vars:Dynamic):Void {
  *             songVars = vars;
  *             
  *             exampleSprite1 = new FunkinSprite().makeSolidColor(256, 256, 0xffaabbcc);
@@ -82,10 +99,27 @@ typedef SongCallbacks = {
  *             
  *             add(exampleSprite1);
  *             exampleSprite1.zIndex = 100;
- *             refresh();
  *             
+ *             refresh();
  *             songVars.inExampleStage = true;
  *         });
+ *         
+ *         ModuleHandler.getModule("cynlib.song.SongHelper").scriptGet("callbacks").events = [
+ *             62 => function(vars:Dynamic):Void { // 3:3:2
+ *                 exampleSprite1.scale.set(0.9, 0.9);
+ *             },
+ *             
+ *             64 => function(vars:Dynamic):Void { // 4:0:0
+ *                 exampleSprite1.scale.set(1.1, 1.1);
+ *                 FlxTween.tween(exampleSprite1.scale, {x: 1, y: 1}, 0.5, {ease: FlxEase.cubeOut});
+ *             }
+ *         ];
+ *     }
+ *     
+ *     override public function resetStage():Void {
+ *         super.resetStage();
+ *         
+ *         ModuleHandler.getModule("cynlib.song.SongHelper").scriptCall("onStageReset");
  *     }
  * }
  * 
@@ -106,17 +140,21 @@ typedef SongCallbacks = {
  *     private var exampleSprite2:FunkinSprite = null;
  *     
  *     override public function onCreate(event:ScriptEvent):Void {
- *         ModuleHandler.getModule("cynlib.song.SongHelper").scriptGet("callbacks").get("pre").push(function(vars:Dynamic):Void {
+ *         ModuleHandler.getModule("cynlib.song.SongHelper").scriptGet("callbacks").createPre.push(function(vars:Dynamic):Void {
  *             songVars = vars;            
  *             
  *             exampleSprite2 = new FunkinSprite().makeSolidColor(512, 512, 0xffccbbaa);
  *             songVars.exampleSprite2 = exampleSprite2;
  *         });
  *         
- *         ModuleHandler.getModule("cynlib.song.SongHelper").scriptGet("callbacks").get("post").push(function(vars:Dynamic):Void {
+ *         ModuleHandler.getModule("cynlib.song.SongHelper").scriptGet("callbacks").createPost.push(function(vars:Dynamic):Void {
  *             songVars.stage.add(exampleSprite2);
  *             exampleSprite2.zIndex = songVars.exampleSprite1.zIndex + 1;
  *             songVars.stage.refresh();
+ *         });
+ *         
+ *         ModuleHandler.getModule("cynlib.song.SongHelper").scriptGet("callbacks").stageReset.push(function(vars:Dynamic):Void {
+ *             songVars.exampleSprite1.angle = 0;
  *         });
  *     }
  *     
@@ -158,7 +196,7 @@ typedef SongCallbacks = {
  *     }
  *     
  *     private function bind():Void {
- *         ModuleHandler.getModule("cynlib.song.SongHelper").scriptGet("callbacks").persist.push(function(vars:Dynamic):Void {
+ *         ModuleHandler.getModule("cynlib.song.SongHelper").scriptGet("callbacks").createPersist.push(function(vars:Dynamic):Void {
  *             inExampleStage = songVars.inExampleStage == true;
  *             if (inExampleStage != true) {
  *                 return;
@@ -190,35 +228,50 @@ class SongHelper extends ScriptedModule {
 	 * 
 	 * Are also passed to the callbacks.
 	 */
-	public var songVars:SongVars = {
-		persist: {},
-		stage: null,
-		song: null
+	public var songVars:SongVars = null;
+	
+	/**
+	 * Various callbacks to help set up your song-related scripts.
+	 */
+	public var callbacks:SongCallbacks = {
+		createPersist: new Array(),
+		createPre: new Array(),
+		createPost: new Array(),
+		
+		events: null,
+		
+		stageReset: new Array()
 	};
 	
 	/**
-	 * Callbacks to help set up your song-related scripts.
+	 * Call this function in your stage script to trigger the `stageReset` callbacks.
 	 */
-	public var callbacks:SongCallbacks = {
-		persist: new Array(),
-		pre: new Array(),
-		post: new Array()
-	};
+	public function onStageReset():Void {
+		for (callback in callbacks.stageReset) {
+			callback(songVars);
+		}
+	}
+	
+	private var completedEvents:Array<Int> = new Array();
+	
+	override public function onCreate(event:ScriptEvent):Void {
+		reset();
+	}
 	
 	override public function onStateChangeEnd(event:StateChangeScriptEvent):Void {
 		if (Std.isOfType(event.targetState, PlayState)) {
 			songVars.song = PlayState.instance.currentSong;
 			songVars.stage = PlayState.instance.currentStage;
 			
-			for (callback in callbacks.persist) {
+			for (callback in callbacks.createPersist) {
 				callback(songVars);
 			}
 			
-			for (callback in callbacks.pre) {
+			for (callback in callbacks.createPre) {
 				callback(songVars);
 			}
 			
-			for (callback in callbacks.post) {
+			for (callback in callbacks.createPost) {
 				callback(songVars);
 			}
 		} else {
@@ -231,28 +284,56 @@ class SongHelper extends ScriptedModule {
 			songVars.song = PlayState.instance.currentSong;
 			songVars.stage = PlayState.instance.currentStage;
 			
-			for (callback in callbacks.persist) {
+			for (callback in callbacks.createPersist) {
 				callback(songVars);
 			}
 			
-			for (callback in callbacks.pre) {
+			for (callback in callbacks.createPre) {
 				callback(songVars);
 			}
 			
-			for (callback in callbacks.post) {
+			for (callback in callbacks.createPost) {
 				callback(songVars);
 			}
 		}
 	}
 	
+	override public function onStepHit(event:SongTimeScriptEvent):Void {
+		if (PlayState.instance == null || PlayState.instance.isMinimalMode || callbacks.events == null) {
+			return;
+		}
+		
+		var step:Int = event.step;
+		if (callbacks.events.exists(step) && completedEvents.indexOf(step) == -1) {
+			callbacks.events.get(step)(songVars);
+			completedEvents.push(step);
+		}
+	}
+	
+	override public function onSongRetry(event:ScriptEvent):Void {
+		completedEvents.resize(0);
+	}
+	
 	private function reset():Void {
+		var persist:Dynamic = {};
+		if (songVars != null) {
+			persist = songVars.persist;
+		}
+		
 		songVars = {
-			persist: songVars.persist,
+			persist: persist,
+			
 			stage: null,
 			song: null
 		};
 		
-		callbacks.pre.resize(0);
-		callbacks.post.resize(0);
+		callbacks.createPre.resize(0);
+		callbacks.createPost.resize(0);
+		
+		callbacks.events = null;
+		
+		callbacks.stageReset.resize(0);
+		
+		completedEvents.resize(0);
 	}
 }
