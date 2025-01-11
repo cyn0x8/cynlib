@@ -4,7 +4,6 @@
 
 - Retroactively improved GitHub changelog.
 - Improved and added to documentation.
-- Linked example videos in the GitHub readme.
 - Removed some redundant code and fixed a few stability issues.
 - Replace internal usages of `FlxTimer` with `Sequence`.
 - Added notekinds:
