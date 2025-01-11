@@ -9,6 +9,7 @@
 - Replace internal usages of `FlxTimer` with `Sequence`.
 - Added notekinds:
   - `cynlib.notekinds.MissNote`
+    - Parameters must be accessed after `onNoteIncoming` until [Funkin#3292](https://github.com/FunkinCrew/Funkin/issues/3292) and [Funkin#3989](https://github.com/FunkinCrew/Funkin/issues/3989) are resolved.
   - `cynlib.notekinds.NoAnimationNote`
 - Added shaders:
   - `cynlib.shaders.AberrationShader`
@@ -45,7 +46,7 @@
   - Small stability fixes with sorting.
 - Changes to `cynlib.util.MathUtil`:
   - Added `smoothLerpDecay` and `smoothLerpPrecision` ([credit to Freya Holmer](https://twitter.com/FreyaHolmer/status/1757918211679650262)).
-    - Temporary until <https://github.com/FunkinCrew/Funkin/pull/3617> gets merged.
+    - Temporary until [Funkin#3617](https://github.com/FunkinCrew/Funkin/pull/3617) gets merged.
   - Removed `remap` (can use `FlxMath.remapToRange` and `FlxMath.bound` instead).
 
 ## v1.0.0
