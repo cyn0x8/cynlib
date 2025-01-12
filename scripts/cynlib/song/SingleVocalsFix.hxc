@@ -1,0 +1,64 @@
+package cynlib.song;
+
+import funkin.audio.VoicesGroup;
+import funkin.modding.module.ScriptedModule;
+import funkin.play.PlayState;
+
+/**
+ * Fixes muting issues with single-vocal songs.
+ * Activate and deactivate this module only as necessary or it might unintentionally affect other mods.
+ */
+class SingleVocalsFix extends ScriptedModule {
+	public function new() {
+		super("cynlib.song.SingleVocalsFix");
+	}
+	
+	/**
+	 * Whether to also unmute the vocals when a ghost miss occurs.
+	 */
+	public var unmuteOnGhostMiss:Bool = false;
+	
+	/**
+	 * Forcibly unmute both player and opponent vocals.
+	 */
+	public function unmuteVocals():Void {
+		var vocals:VoicesGroup = PlayState.instance.vocals;
+		if (vocals != null) {
+			vocals.playerVolume = 1;
+			vocals.opponentVolume = 1;
+		}
+	}
+	
+	override public function onCreate(event:ScriptEvent):Void {
+		active = false;
+	}
+	
+	private var unmuteNextFrame:Bool = false;
+	
+	override public function onNoteHit(event:HitNoteScriptEvent):Void {
+		if (PlayState.instance == null) {
+			return;
+		}
+		
+		unmuteVocals();
+	}
+	
+	override public function onNoteGhostMiss(event:GhostMissNoteScriptEvent):Void {
+		if (PlayState.instance == null || !unmuteOnGhostMiss) {
+			return;
+		}
+		
+		unmuteNextFrame = true;
+	}
+	
+	override public function onUpdate(event:UpdateScriptEvent):Void {
+		if (PlayState.instance == null) {
+			return;
+		}
+		
+		if (unmuteNextFrame) {
+			unmuteNextFrame = false;
+			unmuteVocals();
+		}
+	}
+}
