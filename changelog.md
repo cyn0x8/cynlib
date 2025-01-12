@@ -5,7 +5,7 @@
 - Retroactively improved GitHub changelog.
 - Improved and added to documentation.
 - Removed some redundant code and fixed a few stability issues.
-- Replace internal usages of `FlxTimer` with `Sequence`.
+- Replaced internal usages of `FlxTimer` with `Sequence`.
 - Added notekinds:
   - `cynlib.notekinds.MissNote`
     - Parameters can only be accessed after `onNoteIncoming`.
@@ -45,7 +45,7 @@
 
 ## v2.0.0
 
-- Changed to package based modules/classes.
+- Changed to package-based modules/classes.
 - Changes to `cynlib.reloader.Reloader`
   - Small stability fixes with sorting.
 - Changes to `cynlib.util.MathUtil`:
