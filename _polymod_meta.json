@@ -4,7 +4,9 @@
 	"homepage": "https://github.com/cyn0x8/cynlib",
 	
 	"contributors": [
-		{"name": "cyn0x8", "role": "coder"}
+		{"name": "cyn0x8", "role": "coder", "url": "https://github.com/cyn0x8"},
+		
+		{"name": "Raltyro", "role": "shader coord fix", "url": "https://github.com/Raltyro"}
 	],
 	
 	"license": "MIT",
