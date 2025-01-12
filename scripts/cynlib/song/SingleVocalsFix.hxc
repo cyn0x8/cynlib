@@ -1,6 +1,7 @@
 package cynlib.song;
 
 import funkin.audio.VoicesGroup;
+import funkin.modding.module.ModuleHandler;
 import funkin.modding.module.ScriptedModule;
 import funkin.play.PlayState;
 
@@ -18,17 +19,6 @@ class SingleVocalsFix extends ScriptedModule {
 	 */
 	public var unmuteOnGhostMiss:Bool = false;
 	
-	/**
-	 * Forcibly unmute both player and opponent vocals.
-	 */
-	public function unmuteVocals():Void {
-		var vocals:VoicesGroup = PlayState.instance.vocals;
-		if (vocals != null) {
-			vocals.playerVolume = 1;
-			vocals.opponentVolume = 1;
-		}
-	}
-	
 	override public function onCreate(event:ScriptEvent):Void {
 		active = false;
 	}
@@ -40,7 +30,7 @@ class SingleVocalsFix extends ScriptedModule {
 			return;
 		}
 		
-		unmuteVocals();
+		ModuleHandler.getModule("cynlib.util.SongUtil").scriptCall("unmuteVocals");
 	}
 	
 	override public function onNoteGhostMiss(event:GhostMissNoteScriptEvent):Void {
@@ -58,7 +48,7 @@ class SingleVocalsFix extends ScriptedModule {
 		
 		if (unmuteNextFrame) {
 			unmuteNextFrame = false;
-			unmuteVocals();
+			ModuleHandler.getModule("cynlib.util.SongUtil").scriptCall("unmuteVocals");
 		}
 	}
 }
