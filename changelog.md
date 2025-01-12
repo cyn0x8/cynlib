@@ -1,5 +1,10 @@
 # Changelog
 
+## v4.0.1
+
+- Changes to `cynlib.neocam.Neocam`:
+  - Fixed "SetCameraBop" event error.
+
 ## v4.0.0
 
 - Retroactively improved GitHub changelog.

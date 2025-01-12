@@ -538,7 +538,7 @@ class Neocam extends ScriptedModule {
 						
 						var bumpPattern:IntMap<Float> = new IntMap();
 						bumpPattern.set(0, intensity);
-						obj.setBumpPattern(bumpPattern, rate * 4);
+						obj.setBumpPattern(bumpPattern, rate * 4, null, obj.bumpPatternRelative);
 					}
 				}
 				
