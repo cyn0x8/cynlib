@@ -8,14 +8,17 @@
 - Replace internal usages of `FlxTimer` with `Sequence`.
 - Added notekinds:
   - `cynlib.notekinds.MissNote`
-    - Parameters must be accessed after `onNoteIncoming` until [Funkin#3292](https://github.com/FunkinCrew/Funkin/issues/3292) and [Funkin#3989](https://github.com/FunkinCrew/Funkin/issues/3989) are resolved.
+    - Parameters can only be accessed after `onNoteIncoming`.
+      - Temporary until [Funkin#3292](https://github.com/FunkinCrew/Funkin/issues/3292) is resolved and [Funkin#2635](https://github.com/FunkinCrew/Funkin/pull/2635) merged.
   - `cynlib.notekinds.NoAnimationNote`
 - Added shaders:
   - `cynlib.shaders.AberrationShader`
   - `cynlib.shaders.SaturationShader`
   - `cynlib.shaders.VignetteShader`
 - Added `cynlib.shaders.ShaderCoordFix`.
+  - Globally fixes incorrect shader coordinates when the game is resized.
 - Added `cynlib.song.SingleVocalsFix`.
+  - Fixes muting issues with single-vocal songs.
 - Changes to `cynlib.menu.Menu`:
   - Added support for mouse-based items, separate from keyboard-based ones. See internal documentation for more info.
 - Changes to `cynlib.menu.MenuItem`:

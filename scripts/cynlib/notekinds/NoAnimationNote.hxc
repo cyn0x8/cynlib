@@ -14,14 +14,14 @@ typedef ExclusionData = {
  */
 class NoAnimationNote extends ScriptedNoteKind {
 	public function new() {
-		super("NoAnimation", "No Animation");
+		super("cynlib.notekinds.NoAnimationNote", "No Animation");
 	}
 	
 	private var opponentExclusion:Null<ExclusionData> = null;
 	private var playerExclusion:Null<ExclusionData> = null;
 	
 	override public function onNoteHit(event:HitNoteScriptEvent):Void {
-		if (event.note.noteData.get_kind() != "NoAnimation") {
+		if (event.note.noteData.get_kind() != "cynlib.notekinds.NoAnimationNote") {
 			if (event.note.noteData.getMustHitNote()) {
 				tryClearPlayerExclusion();
 			} else {
