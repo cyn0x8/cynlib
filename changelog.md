@@ -14,6 +14,7 @@
   - `cynlib.shaders.AberrationShader`
   - `cynlib.shaders.SaturationShader`
   - `cynlib.shaders.VignetteShader`
+- Added `cynlib.shaders.ShaderCoordFix`.
 - Changes to `cynlib.menu.Menu`:
   - Added support for mouse-based items, separate from keyboard-based ones. See internal documentation for more info.
 - Changes to `cynlib.menu.MenuItem`:
