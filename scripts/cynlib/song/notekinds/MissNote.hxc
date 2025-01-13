@@ -19,7 +19,7 @@ import funkin.play.notes.notekind.ScriptedNoteKind;
  */
 class MissNote extends ScriptedNoteKind {
 	public function new() {
-		super("cynlib.notekinds.MissNote", "Miss Note");
+		super("cynlib.song.notekinds.MissNote", "Miss Note");
 	}
 	
 	private var paramDefaults:Dynamic = {
@@ -34,7 +34,7 @@ class MissNote extends ScriptedNoteKind {
 	}
 	
 	override public function onNoteIncoming(event:NoteScriptEvent):Void {
-		if (event.note.get_kind() != "cynlib.notekinds.MissNote") {
+		if (event.note.get_kind() != "cynlib.song.notekinds.MissNote") {
 			return;
 		}
 		
@@ -51,7 +51,7 @@ class MissNote extends ScriptedNoteKind {
 	}
 	
 	override public function onNoteHit(event:HitNoteScriptEvent):Void {
-		if (event.note.get_kind() != "cynlib.notekinds.MissNote") {
+		if (event.note.get_kind() != "cynlib.song.notekinds.MissNote") {
 			return;
 		}
 		
@@ -82,7 +82,7 @@ class MissNote extends ScriptedNoteKind {
 	}
 	
 	override public function onNoteMiss(event:NoteScriptEvent):Void {
-		if (event.note.get_kind() != "cynlib.notekinds.MissNote") {
+		if (event.note.get_kind() != "cynlib.song.notekinds.MissNote") {
 			return;
 		}
 		

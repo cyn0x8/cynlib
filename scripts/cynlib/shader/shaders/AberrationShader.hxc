@@ -1,4 +1,4 @@
-package cynlib.shaders;
+package cynlib.shader.shaders;
 
 import funkin.Assets;
 import funkin.Paths;

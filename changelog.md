@@ -1,10 +1,5 @@
 # Changelog
 
-## v4.0.1
-
-- Changes to `cynlib.neocam.Neocam`:
-  - Fixed "SetCameraBop" event error.
-
 ## v4.0.0
 
 - Retroactively improved GitHub changelog.
@@ -12,16 +7,22 @@
 - Removed some redundant code and fixed a few stability issues.
 - Replaced internal usages of `FlxTimer` with `Sequence`.
 - Added notekinds:
-  - `cynlib.notekinds.MissNote`
+  - `cynlib.song.notekinds.AltNote`
+    - A note kind that plays the sing animation with the "alt" suffix.
+  - `cynlib.song.notekinds.MissNote`
+    - A note kind that causes the note to be "missed" by the player or opponent.
     - Parameters can only be accessed after `onNoteIncoming`.
       - Temporary until [Funkin#3292](https://github.com/FunkinCrew/Funkin/issues/3292) is resolved and [Funkin#2635](https://github.com/FunkinCrew/Funkin/pull/2635) merged.
-  - `cynlib.notekinds.NoAnimationNote`
+  - `cynlib.song.notekinds.NoAnimationNote`
+    - A note kind that skips the singing animation for the note.
 - Added shaders:
-  - `cynlib.shaders.AberrationShader`
-  - `cynlib.shaders.SaturationShader`
-  - `cynlib.shaders.VignetteShader`
-- Added `cynlib.shaders.ShaderCoordFix`.
+  - `cynlib.shader.shaders.AberrationShader`
+  - `cynlib.shader.shaders.SaturationShader`
+  - `cynlib.shader.shaders.VignetteShader`
+- Added `cynlib.shader.ShaderCoordFix`.
   - Globally fixes incorrect shader coordinates when the game is resized.
+- Added `cynlib.song.NoteAnimOverride`.
+  - Helper module for overriding note singing animations.
 - Added `cynlib.song.SingleVocalsFix`.
   - Fixes muting issues with single-vocal songs.
 - Changes to `cynlib.menu.Menu`:
