@@ -146,7 +146,7 @@ class Reloader extends ScriptedModule {
 		for (i in 0...sorted.length) {
 			var module:String = sorted[i];
 			
-			trace("cynlib: reloading module \"" + module + "\"");
+			trace("cynlib: Reloading module \"" + module + "\"...");
 			
 			var data:ReloadData = reloadData.get(module);
 			if (data.variables != null) {
@@ -178,16 +178,16 @@ class Reloader extends ScriptedModule {
 		FlxG.signals.preStateSwitch.addOnce(function():Void {
 			reload(reloadPre);
 			
-			trace("cynlib: pre switch reload complete");
+			trace("cynlib: Pre-switch reload complete.");
 		});
 		
 		FlxG.signals.postStateSwitch.addOnce(function():Void {
 			reload(reloadPost);
 			
-			trace("cynlib: post switch reload complete");
+			trace("cynlib: Post-switch reload complete.");
 			
 			if (targetState != null) {
-				trace("cynlib: switching to target state \"" + targetState + "\"");
+				trace("cynlib: Switching to target state \"" + targetState + "\"...");
 				
 				FlxG.switchState(ScriptedMusicBeatState.init(targetState));
 			}
