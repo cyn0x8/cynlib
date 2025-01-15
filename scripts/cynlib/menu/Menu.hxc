@@ -331,7 +331,7 @@ class Menu extends ScriptedModule {
 			curItem.onFocus(prevItem);
 		};
 		
-		for (i in 0 ... obj.items.length) {
+		for (i in 0...obj.items.length) {
 			var item:Dynamic = obj.items[i];
 			
 			item.menu = obj;
@@ -354,7 +354,7 @@ class Menu extends ScriptedModule {
 				return;
 			}
 			
-			for (i in 0 ... items.length) {
+			for (i in 0...items.length) {
 				var item:Dynamic = items[i];
 				
 				if (obj.items.length >= obj.sizeX * obj.sizeY) {
@@ -374,7 +374,7 @@ class Menu extends ScriptedModule {
 			}
 		};
 		
-		for (i in 0 ... obj.mouseItems.length) {
+		for (i in 0...obj.mouseItems.length) {
 			var item:Dynamic = obj.mouseItems[i];
 			
 			item.menu = obj;
@@ -388,7 +388,7 @@ class Menu extends ScriptedModule {
 				return;
 			}
 			
-			for (i in 0 ... items.length) {
+			for (i in 0...items.length) {
 				var item:Dynamic = items[i];
 				
 				obj.mouseItems.push(item);
@@ -513,7 +513,7 @@ class Menu extends ScriptedModule {
 				
 				if (FlxG.mouse.enabled) {
 					var curMouseSelection:Null<Int> = -1;
-					for (i in 0 ... obj.mouseItems.length) {
+					for (i in 0...obj.mouseItems.length) {
 						var item:Dynamic = obj.mouseItems[i];
 						if (item.container == null) {
 							continue;

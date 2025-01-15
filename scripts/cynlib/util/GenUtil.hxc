@@ -125,7 +125,7 @@ class GenUtil extends ScriptedModule {
 	public function shuffleArray(array:Array<Dynamic>):Array<Dynamic> {
 		var ret:Array<Dynamic> = array.copy();
 		
-		for (i in 0 ... ret.length - 1) {
+		for (i in 0...ret.length - 1) {
 			var j:Int = FlxG.random.int(i, ret.length - 1);
 			var temp:Dynamic = ret[i];
 			ret[i] = ret[j];
