@@ -1,5 +1,6 @@
 package cynlib.save;
 
+import String;
 import StringTools;
 
 import haxe.ds.StringMap;

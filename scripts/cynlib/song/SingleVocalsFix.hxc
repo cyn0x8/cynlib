@@ -1,6 +1,5 @@
 package cynlib.song;
 
-import funkin.audio.VoicesGroup;
 import funkin.modding.module.ModuleHandler;
 import funkin.modding.module.ScriptedModule;
 import funkin.play.PlayState;

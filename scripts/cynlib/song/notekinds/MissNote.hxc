@@ -1,4 +1,4 @@
-package cynlib.notekinds;
+package cynlib.song.notekinds;
 
 import flixel.FlxG;
 

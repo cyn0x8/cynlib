@@ -1,4 +1,4 @@
-package cynlib.notekinds;
+package cynlib.song.notekinds;
 
 import funkin.modding.module.ModuleHandler;
 import funkin.play.character.BaseCharacter;
