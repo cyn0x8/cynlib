@@ -77,6 +77,7 @@ typedef SongCallbacks = {
  * import flixel.tweens.FlxEase;
  * import flixel.tweens.FlxTween;
  * 
+ * import funkin.Conductor;
  * import funkin.graphics.FunkinSprite;
  * import funkin.modding.module.ModuleHandler;
  * import funkin.play.stage.ScriptedStage;
@@ -112,6 +113,24 @@ typedef SongCallbacks = {
  *             64 => function(vars:Dynamic):Void { // 4:0:0
  *                 exampleSprite1.scale.set(1.1, 1.1);
  *                 FlxTween.tween(exampleSprite1.scale, {x: 1, y: 1}, 0.5, {ease: FlxEase.cubeOut});
+ *                 
+ *                 ModuleHandler.getModule("cynlib.sequence.SongSequence").scriptCall("new_SongSequence", [[
+ *                     {time: 0.5, callback: function():Void {
+ *                         songVars.exampleSprite2.visible = false;
+ *                     }},
+ *                     
+ *                     {time: 1, callback: function():Void {
+ *                         songVars.exampleSprite2.visible = true;
+ *                     }},
+ *                     
+ *                     {time: 1.5, callback: function():Void {
+ *                         songVars.exampleSprite2.visible = false;
+ *                     }},
+ *                     
+ *                     {time: 2, callback: function():Void {
+ *                         songVars.exampleSprite2.visible = true;
+ *                     }}
+ *                 ], Conductor.get_instance().get_beatLengthMs() / 1000]);
  *             }
  *         ];
  *     }

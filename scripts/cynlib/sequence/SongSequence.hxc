@@ -73,6 +73,8 @@ typedef SongSequence = {
 
 /**
  * Module for creating `SongSequence` objects based on `Conductor` time.
+ * 
+ * Example: (see usage in `SongHelper` example)
  */
 class SongSequence extends ScriptedModule {
 	public function new() {
