@@ -215,4 +215,51 @@ class GenUtil extends ScriptedModule {
 		
 		return ReflectUtil.getAnonymousField(eases, name);
 	}
+	
+	private var invalidChars:Array<String> = [":", "*", "?", "\"", "<", ">", "|"];
+		
+	/**
+	 * Prevent paths from exiting the root.
+	 *
+	 * @param path The path to sanitize.
+	 * @return The sanitized path.
+	 */
+	public static function sanitizePath(path:String):String {
+		path = StringTools.trim(path);
+		path = StringTools.replace(path, "\\", "/");
+		
+		if (StringTools.contains(path, ":")) {
+			path = path.substring(path.lastIndexOf(":") + 1);
+		}
+		
+		while (path.charAt(0) == "/") {
+			path = path.substring(1);
+		}
+		
+		for (char in invalidChars) {
+			path = StringTools.replace(path, char, "");
+		}
+		
+		var parts:Array<String> = path.split("/");
+		var sanitized:Array<String> = new Array();
+		for (part in parts) {
+			switch (part) {
+				case ".", "": {
+					continue;
+				}
+				
+				case "..": {
+					if (sanitized.length > 0) {
+						sanitized.pop();
+					}
+				}
+				
+				default: {
+					sanitized.push(part);
+				}
+			}
+		}
+		
+		return sanitized.join("/");
+	}
 }

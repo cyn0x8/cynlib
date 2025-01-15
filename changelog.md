@@ -44,6 +44,7 @@
   - Now calls callbacks when playtesting during charting (not minimal mode).
 - Changes to `cynlib.util.GenUtil`:
   - Added `randomCallback`.
+  - Added `sanitizePath`.
 
 ## v3.0.0
 
