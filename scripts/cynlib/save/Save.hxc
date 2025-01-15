@@ -32,7 +32,12 @@ typedef SaveEntryData = {
 	/**
 	 * The default save data structure to use if the file doesn't exist. Defaults to an empty object.
 	 */
-	template:Dynamic
+	template:Dynamic,
+	
+	/**
+	 * Whether the save data should be saved to disk when the game reloads. Defaults to `true`.
+	 */
+	saveOnReload:Bool
 }
 
 /**
@@ -59,12 +64,70 @@ typedef SaveEntry = {
 	 * Your mod's save data structure. Defaults to `template`, or the file contents if it exists.
 	 * Returned by `getSaveData`.
 	 */
-	saveData:Dynamic
+	saveData:Dynamic,
+	
+	/**
+	 * Whether the save data should be saved to disk when the game reloads. Defaults to `true`.
+	 */
+	saveOnReload:Bool
 }
 
 /**
  * A helper module for managing mod save data.
  * This will create a `save` folder in the game's directory when a mod registers a save entry.
+ * 
+ * Example:
+ * ```haxe
+ * package exampleMod;
+ * 
+ * import funkin.modding.module.ModuleHandler;
+ * import funkin.modding.module.ScriptedModule;
+ * 
+ * class SaveExample extends ScriptedModule {
+ *     public function new() {
+ *         super("exampleMod.SaveExample", -2147483646);
+ *     }
+ *     
+ *     private var filePath:String = "exampleModSave"; // Will save to "save/exampleModSave.json"
+ *     
+ *     private var template:Dynamic = {
+ *         exampleValue: 0
+ *         exampleArray: new Array(),
+ *         exampleObject: {
+ *             exampleKey: "exampleValue"
+ *         }
+ *     };
+ *     
+ *     override public function onCreate(event:ScriptEvent):Void {
+ *         // Dynamically modify the template before registering if needed.
+ *         for (i in 0...10) {
+ *             template.exampleArray.push(i);
+ *         }
+ *         
+ *         ModuleHandler.getModule("cynlib.save.Save").scriptCall("register", [{
+ *             id: "exampleMod",
+ *             filePath: filePath,
+ *             template: template
+ *         }]);
+ *     }
+ *     
+ *     public function increment():Void {
+ *         var saveData:Dynamic = ModuleHandler.getModule("cynlib.save.Save").scriptCall("getSaveData", ["exampleMod"]);
+ *         saveData.exampleValue++;
+ *     }
+ *     
+ *     // You can set up an auto-save system like this:
+ *     private var autoSaveTick:Float = 0;
+ *     private var autoSaveInterval:Float = 60;
+ *     override public function onUpdate(event:UpdateScriptEvent):Void {
+ *         autoSaveTick += event.elapsed;
+ *         if (autoSaveTick >= autoSaveInterval) {
+ *             autoSaveTick %= autoSaveInterval;
+ *             ModuleHandler.getModule("cynlib.save.Save").scriptCall("save", ["exampleMod"]);
+ *         }
+ *     }
+ * }
+ * ```
  */
 class Save extends ScriptedModule {
 	public function new() {
@@ -72,15 +135,10 @@ class Save extends ScriptedModule {
 	}
 	
 	/**
-	 * Whether to save the data to disk when the game reloads.
-	 */
-	public var saveOnReload:Bool = true;
-	
-	/**
 	 * Registers a save entry and attempts to load the data.
 	 * If the file doesn't exist, the template is used.
 	 * 
-	 * @param data The data for the save entry.
+	 * @param data The save entry data.
 	 * @param cleanSave If `true`, keys in the loaded data that don't exist in the template will be removed.
 	 * @return Your mod's save data structure, or `null` if the ID is invalid.
 	 */
@@ -110,6 +168,10 @@ class Save extends ScriptedModule {
 			}
 		} else {
 			trace("cynlib: No exising save data found for entry \"" + data.id + "\". Initializing with template.");
+		}
+		
+		if (data.saveOnReload == null) {
+			data.saveOnReload = true;
 		}
 		
 		entries.set(data.id, data);
@@ -179,7 +241,7 @@ class Save extends ScriptedModule {
 	
 	private function hook():Void {
 		ModuleHandler.getModule("cynlib.reloader.Reloader").scriptGet("reloadPre").set("cynlib.save.Save", {
-			priority: -2147483647,
+			priority: -2147483648,
 			callback: "onReload",
 			variables: function():StringMap<Dynamic> {
 				return [
@@ -216,8 +278,10 @@ class Save extends ScriptedModule {
 			return;
 		}
 		
-		if (saveOnReload) {
-			saveAll();
+		for (entry in entries.keys()) {
+			if (entries.get(entry).saveOnReload) {
+				save(entry);
+			}
 		}
 		
 		if (WindowUtil.windowExit.has(exit)) {
@@ -252,7 +316,12 @@ class Save extends ScriptedModule {
 			entry.filePath = entry.id;
 		}
 		
-		entry.filePath = "save/" + ModuleHandler.getModule("cynlib.util.GenUtil").scriptCall("sanitizePath", [entry.filePath]);
+		entry.filePath = ModuleHandler.getModule("cynlib.util.GenUtil").scriptCall("sanitizePath", [entry.filePath]);
+		
+		if (!StringTools.startsWith(entry.filePath, "save/")) {
+			entry.filePath = "save/" + entry.filePath;
+		}
+		
 		if (!StringTools.endsWith(entry.filePath, ".json")) {
 			entry.filePath += ".json";
 		}
