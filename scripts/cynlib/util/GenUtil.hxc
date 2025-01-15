@@ -42,8 +42,8 @@ class GenUtil extends ScriptedModule {
 	}
 	
 	/**
-	 * Because HScript kinda breaks when try/catch blocks fail, this function is a workaround.
-	 * Unfortunately, it's not perfect, since the catch value isn't accessible, but it's better than nothing.
+	 * Because hscript kinda breaks when try/catch blocks fail, this function is a temporary workaround.
+	 * Unfortunately, it's not perfect, since the catch value isn't accessible, but it's better than nothing...
 	 * 
 	 * @param func The function to try.
 	 * @param caught The function to run if the try block fails.
@@ -59,7 +59,9 @@ class GenUtil extends ScriptedModule {
 			return success;
 		};
 		
-		if (block() != true && caught != null) {caught();}
+		if (block() != true && caught != null) {
+			caught();
+		}
 	}
 	
 	/**
