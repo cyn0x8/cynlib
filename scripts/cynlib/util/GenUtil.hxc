@@ -6,10 +6,28 @@ import thx.Objects;
 import thx.Types;
 
 import flixel.FlxG;
+import flixel.math.FlxMath;
 import flixel.tweens.FlxEase;
 
 import funkin.modding.module.ScriptedModule;
 import funkin.util.ReflectUtil;
+
+/**
+ * An object to use for weighted random callbacks in `randomCallback`.
+ */
+typedef RandomCallbackData = {
+	/**
+	 * The arbitrary weight of the callback (higher is more likely).
+	 * 
+	 * For example, 2 callbacks with weights 0.5 and 1 would have a 1/3 and 2/3 chance of being called respectively.
+	 */
+	weight:Float,
+	
+	/**
+	 * The callback to call if chosen.
+	 */
+	callback:()->Void
+}
 
 /**
  * General utility module.
@@ -113,6 +131,44 @@ class GenUtil extends ScriptedModule {
 		}
 		
 		return ret;
+	}
+	
+	/**
+	 * Makes a random weighted selection from a list of callbacks, and calls it by default.
+	 * 
+	 * @param callbacks An array of `RandomCallbackData` objects.
+	 * @param callImmediately Whether to call the chosen callback immediately. Defaults to `true`.
+	 * @param randOverride Optional override for the random number to use. Range is clamped to [0, 1].
+	 * @return The callback that was chosen.
+	 */
+	public function randomCallback(callbacks:Array<RandomCallbackData>, callImmediately:Bool = true, ?randOverride:Float):()->Void {
+		var totalWeight:Float = 0;
+		for (callback in callbacks) {
+			if (callback.weight < 0) {
+				callback.weight = 0;
+			}
+			
+			totalWeight += callback.weight;
+		}
+		
+		var rand:Float = FlxG.random.float(0, 1);
+		if (randOverride != null) {
+			rand = FlxMath.bound(randOverride, 0, 1);
+		}
+		
+		rand *= totalWeight;
+		
+		var currentWeight:Float = 0;
+		for (callback in callbacks) {
+			currentWeight += callback.weight;
+			if (rand <= currentWeight) {
+				if (callImmediately) {
+					callback.callback();
+				}
+				
+				return callback.callback;
+			}
+		}
 	}
 	
 	/**

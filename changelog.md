@@ -41,6 +41,8 @@
   - Added step-based callback integer map for song events
   - Added `stageReset` callback array.
   - Now calls callbacks when playtesting during charting (not minimal mode).
+- Changes to `cynlib.util.GenUtil`:
+  - Added `randomCallback`.
 
 ## v3.0.0
 
