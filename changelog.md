@@ -2,7 +2,7 @@
 
 ## v4.0.0
 
-- Retroactively improved GitHub changelog.
+- Retroactively improved GitHub changelog and readme.
 - Improved and added to documentation.
 - Removed some redundant code and fixed a few stability issues.
 - Replaced internal usages of `FlxTimer` with `Sequence`.
