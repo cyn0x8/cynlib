@@ -1,0 +1,274 @@
+package cynlib.save;
+
+import StringTools;
+
+import haxe.ds.StringMap;
+
+import flixel.FlxG;
+
+import funkin.modding.module.ModuleHandler;
+import funkin.modding.module.ScriptedModule;
+import funkin.play.PlayState;
+import funkin.util.FileUtil;
+import funkin.util.FileWriteMode;
+import funkin.util.SerializerUtil;
+import funkin.util.WindowUtil;
+
+/**
+ * Data for registering a save entry.
+ */
+typedef SaveEntryData = {
+	/**
+	 * Identifier string for your mod's save data. Make sure it's unique!
+	 */
+	id:String,
+	
+	/**
+	 * The file path to read and write the data to, relative to "./save". Defaults to `id`.
+	 * This should be a JSON file; the extension will be added if not provided.
+	 */
+	filePath:String,
+	
+	/**
+	 * The default save data structure to use if the file doesn't exist. Defaults to an empty object.
+	 */
+	template:Dynamic
+}
+
+/**
+ * Internal save entry object.
+ */
+typedef SaveEntry = {
+	/**
+	 * Identifier string for your mod's save data. Make sure it's unique!
+	 */
+	id:String,
+	
+	/**
+	 * The file path to read and write the data to, relative to "./save". Defaults to `id`.
+	 * This should be a JSON file; the extension will be added if not provided.
+	 */
+	filePath:String,
+	
+	/**
+	 * The default save data structure to use if the file doesn't exist. Defaults to an empty object.
+	 */
+	template:Dynamic,
+	
+	/**
+	 * Your mod's save data structure. Defaults to `template`, or the file contents if it exists.
+	 * Returned by `getSaveData`.
+	 */
+	saveData:Dynamic
+}
+
+/**
+ * A helper module for managing mod save data.
+ * This will create a `save` folder in the game's directory when a mod registers a save entry.
+ */
+class Save extends ScriptedModule {
+	public function new() {
+		super("cynlib.save.Save", -2147483647);
+	}
+	
+	/**
+	 * Whether to save the data to disk when the game reloads.
+	 */
+	public var saveOnReload:Bool = true;
+	
+	/**
+	 * Registers a save entry and attempts to load the data.
+	 * If the file doesn't exist, the template is used.
+	 * 
+	 * @param data The data for the save entry.
+	 * @param cleanSave If `true`, keys in the loaded data that don't exist in the template will be removed.
+	 * @return Your mod's save data structure, or `null` if the ID is invalid.
+	 */
+	public function register(data:SaveEntryData, cleanSave:Bool = false):Dynamic {
+		if (checkID(data) == null) {
+			return;
+		}
+		
+		if (entries.exists(data.id)) {
+			return entries.get(data.id).data;
+		}
+		
+		trace("cynlib: Registering save entry \"" + data.id + "\"...");
+		
+		checkFilePath(data);
+		
+		checkSaveData(data);
+		
+		if (FileUtil.doesFileExist(data.filePath)) {
+			var saveJSON:Dynamic = FileUtil.readJSONFromPath(data.filePath);
+			if (saveJSON != null) {
+				data.saveData = ModuleHandler.getModule("cynlib.util.GenUtil").scriptCall("objectMerge", [data.saveData, saveJSON, cleanSave]);
+				
+				trace("cynlib: Save data for entry \"" + data.id + "\" loaded.");
+			} else {
+				trace("cynlib: Failed to read save data for entry \"" + data.id + "\". Using template.");
+			}
+		} else {
+			trace("cynlib: No exising save data found for entry \"" + data.id + "\". Initializing with template.");
+		}
+		
+		entries.set(data.id, data);
+		
+		return data.saveData;
+	}
+	
+	/**
+	 * Gets the save data for a registered entry.
+	 */
+	public function getSaveData(id:String):Null<Dynamic> {
+		if (!entries.exists(id)) {
+			return;
+		}
+		
+		return checkSaveData(entries.get(id));
+	}
+	
+	/**
+	 * Attempt to save the data for a registered entry to disk.
+	 * 
+	 * @param id The ID of the save entry.
+	 * @param pretty If `true`, the JSON will be pretty-printed, and minified otherwise.
+	 * @return Whether the save was successful.
+	 */
+	public function save(id:String, pretty:Bool = true):Bool {
+		if (!entries.exists(id)) {
+			return false;
+		}
+		
+		var entry:SaveEntry = entries.get(id);
+		if (checkID(entry) == null) {
+			entry.id = id;
+		}
+		
+		FileUtil.writeStringToPath(checkFilePath(entry), SerializerUtil.toJSON(checkSaveData(entry), null, pretty), FileWriteMode.Force);
+		
+		return true;
+	}
+	
+	/**
+	 * Attempts to save all registered entries to disk.
+	 * 
+	 * @param pretty If `true`, the JSONs will be pretty-printed, and minified otherwise.
+	 * @return Whether all saves were successful.
+	 */
+	public function saveAll(pretty:Bool = true):Bool {
+		var success:Bool = true;
+		for (entry in entries.keys()) {
+			success = success && save(entry, pretty);
+		}
+		
+		return success;
+	}
+	
+	/**
+	 * Internal variable to store save entries.
+	 * Don't touch this please...
+	 */
+	private var entries:StringMap<SaveEntry> = new StringMap();
+	
+	override public function onCreate(event:ScriptEvent):Void {
+		hook();
+		
+		WindowUtil.windowExit.add(exit);
+	}
+	
+	private function hook():Void {
+		ModuleHandler.getModule("cynlib.reloader.Reloader").scriptGet("reloadPre").set("cynlib.save.Save", {
+			priority: -2147483647,
+			callback: "onReload",
+			variables: function():StringMap<Dynamic> {
+				return [
+					"entries" => entries
+				];
+			}
+		});
+	}
+	
+	public function onReload():Void {
+		hook();
+		
+		WindowUtil.windowExit.add(exit);
+	}
+	
+	public var exit:(Null<Dynamic>)->Void = function(?_):Void {
+		saveAll();
+		
+		if (WindowUtil.windowExit.has(exit)) {
+			WindowUtil.windowExit.remove(exit);
+		}
+	};
+	
+	private var pressedReload:Bool = false;
+	override public function onUpdate(event:UpdateScriptEvent):Void {
+		pressedReload = FlxG.keys.justPressed.F5;
+	}
+	
+	override public function onDestroy(event:ScriptEvent):Void {
+		if (
+			(PlayState.instance != null && PlayState.instance.criticalFailure) ||
+			(!FlxG.keys.justPressed.F5 && !pressedReload)
+		) {
+			return;
+		}
+		
+		if (saveOnReload) {
+			saveAll();
+		}
+		
+		if (WindowUtil.windowExit.has(exit)) {
+			WindowUtil.windowExit.remove(exit);
+		}
+	}
+	
+	private function checkID(entry:Dynamic):Null<String> {
+		if (entry == null || entry.id == null || !Std.isOfType(entry.id, String)) {
+			return;
+		}
+		
+		entry.id = StringTools.trim(entry.id);
+		if (entry.id == "") {
+			return;
+		}
+		
+		return entry.id;
+	}
+	
+	private function checkFilePath(entry:Dynamic):Null<String> {
+		if (checkID(entry) == null) {
+			return;
+		}
+		
+		if (entry.filePath == null || !Std.isOfType(entry.filePath, String)) {
+			entry.filePath = entry.id;
+		}
+		
+		entry.filePath = StringTools.trim(entry.filePath);
+		if (entry.filePath == "") {
+			entry.filePath = entry.id;
+		}
+		
+		entry.filePath = "save/" + ModuleHandler.getModule("cynlib.util.GenUtil").scriptCall("sanitizePath", [entry.filePath]);
+		if (!StringTools.endsWith(entry.filePath, ".json")) {
+			entry.filePath += ".json";
+		}
+		
+		return entry.filePath;
+	}
+	
+	private function checkSaveData(entry:Dynamic):Dynamic {
+		if (entry.template == null) {
+			entry.template = {};
+		}
+		
+		if (entry.saveData == null) {
+			entry.saveData = entry.template;
+		}
+		
+		return entry.saveData;
+	}
+}

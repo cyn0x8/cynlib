@@ -19,6 +19,8 @@
   - `cynlib.shader.shaders.AberrationShader`
   - `cynlib.shader.shaders.SaturationShader`
   - `cynlib.shader.shaders.VignetteShader`
+- Added `cynlib.save.Save`
+  - A helper module for managing mod save data.
 - Added `cynlib.shader.ShaderCoordFix`.
   - Globally fixes incorrect shader coordinates when the game is resized.
 - Added `cynlib.song.NoteAnimOverride`.
