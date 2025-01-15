@@ -258,6 +258,8 @@ class Save extends ScriptedModule {
 	}
 	
 	public var exit:(Null<Dynamic>)->Void = function(?_):Void {
+		trace("cynlib: Game closing! Attempting to write all save data...");
+		
 		saveAll();
 		
 		if (WindowUtil.windowExit.has(exit)) {
