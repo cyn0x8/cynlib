@@ -515,11 +515,14 @@ class Menu extends ScriptedModule {
 					var curMouseSelection:Null<Int> = -1;
 					for (i in 0...obj.mouseItems.length) {
 						var item:Dynamic = obj.mouseItems[i];
-						if (item.container == null) {
-							continue;
+						if (item.hitbox == null) {
+							item.hitbox = item.container;
+							if (item.hitbox == null) {
+								continue;
+							}
 						}
 						
-						if (FlxG.mouse.overlaps(item.container)) {
+						if (FlxG.mouse.overlaps(item.hitbox)) {
 							curMouseSelection = obj.mouseItems.indexOf(item);
 							item.focused = true;
 							break;

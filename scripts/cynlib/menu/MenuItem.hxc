@@ -24,6 +24,12 @@ typedef MenuItem = {
 	container:Null<FlxBasic>,
 	
 	/**
+	 * The hitbox of the item. Only used for mouse-based items.
+	 * Uses `container` if `null`.
+	 */
+	hitbox:Null<FlxBasic>,
+	
+	/**
 	 * Whether the item should automatically navigate to other items in the menu.
 	 */
 	autoNavigate:Bool,
@@ -41,19 +47,19 @@ typedef MenuItem = {
 	/**
 	 * Called when the item is focused.
 	 * 
-	 * @param prev	The previously focused item.
+	 * @param prev The previously focused item. May be `null` if this item is a mouse-based item.
 	 */
 	onFocus:Null<(Dynamic)->Void>,
 	
 	/**
 	 * Called when the item is unfocused.
 	 * 
-	 * @param next	The now focused item.
+	 * @param next The now focused item. May be `null` if this item is a mouse-based item.
 	 */
 	onUnfocus:Null<(Dynamic)->Void>,
 	
 	/**
-	 * Called when input is detected.
+	 * Called when a direction is pressed. Only used for keyboard-based items.
 	 * 
 	 * @param directions A list of directional inputs, in order of left/down/up/right.
 	 */
@@ -95,6 +101,12 @@ typedef MenuItemData = {
 	 * Arbitrary related container object.
 	 */
 	container:Null<FlxBasic>,
+	
+	/**
+	 * The hitbox of the item. Only used for mouse-based items.
+	 * Uses `container` if `null`.
+	 */
+	hitbox:Null<FlxBasic>,
 	
 	/**
 	 * Whether the item should automatically navigate to other items in the menu.
@@ -168,7 +180,9 @@ class MenuItem extends ScriptedModule {
 			data: data.data == null ? {} : data.data,
 			
 			menu: data.menu,
+			
 			container: data.container,
+			hitbox: data.hitbox,
 			
 			autoNavigate: data.autoNavigate == null ? true : data.autoNavigate,
 			

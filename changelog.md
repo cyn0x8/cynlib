@@ -28,6 +28,7 @@
 - Changes to `cynlib.menu.Menu`:
   - Added support for mouse-based items, separate from keyboard-based ones. See internal documentation for more info.
 - Changes to `cynlib.menu.MenuItem`:
+  - Added `hitbox` property for mouse-based items.
   - Now respects `enabled` property (whoops).
 - Changes to `cynlib.neocam.Neocam`:
   - Can now have a `startPosition`, `startZoom`, and `startBumpPattern` on creation.
