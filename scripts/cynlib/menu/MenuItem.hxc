@@ -155,7 +155,7 @@ typedef MenuItemData = {
 /**
  * Module for creating `MenuItem` objects.
  * 
- * Example: (see `Menu` example)
+ * Example: (see usage in `Menu` example)
  */
 class MenuItem extends ScriptedModule {
 	public function new() {

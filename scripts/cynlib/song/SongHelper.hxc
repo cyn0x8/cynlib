@@ -69,7 +69,8 @@ typedef SongCallbacks = {
  * 
  * Example:
  * ```haxe
- * // Example stage script that creates a sprite and adds it to the stage, as well as some events.
+ * // Example stage script.
+ * // Creates a sprite and adds it to the stage, as well as some example events.
  * package exampleMod.stages;
  * 
  * import haxe.ds.IntMap;
@@ -92,6 +93,8 @@ typedef SongCallbacks = {
  *     private var exampleSprite1:FunkinSprite = null;
  *     
  *     override public function onCreate(event:ScriptEvent):Void {
+ *         ModuleHandler.getModule("cynlib.song.SongHelper").scriptSet("inExampleStage", true);
+ *         
  *         ModuleHandler.getModule("cynlib.song.SongHelper").scriptGet("callbacks").get("createPre").push(function(vars:Dynamic):Void {
  *             songVars = vars;
  *             
@@ -102,9 +105,9 @@ typedef SongCallbacks = {
  *             exampleSprite1.zIndex = 100;
  *             
  *             refresh();
- *             songVars.inExampleStage = true;
  *         });
  *         
+ *         // Stages can also have their own events!
  *         ModuleHandler.getModule("cynlib.song.SongHelper").scriptGet("callbacks").events = [
  *             62 => function(vars:Dynamic):Void { // 3:3:2
  *                 exampleSprite1.scale.set(0.9, 0.9);
@@ -142,7 +145,8 @@ typedef SongCallbacks = {
  *     }
  * }
  * 
- * // Example song script that creates a second sprite and uses the first sprite from the stage script.
+ * // Example song script.
+ * // Creates a second sprite and uses the first sprite from the stage script.
  * package exampleMod.songs;
  * 
  * import funkin.graphics.FunkinSprite;
@@ -159,6 +163,8 @@ typedef SongCallbacks = {
  *     private var exampleSprite2:FunkinSprite = null;
  *     
  *     override public function onCreate(event:ScriptEvent):Void {
+ *         ModuleHandler.getModule("cynlib.song.SongHelper").scriptSet("inExampleModSong", true);
+ *         
  *         ModuleHandler.getModule("cynlib.song.SongHelper").scriptGet("callbacks").createPre.push(function(vars:Dynamic):Void {
  *             songVars = vars;            
  *             
@@ -172,6 +178,12 @@ typedef SongCallbacks = {
  *             songVars.stage.refresh();
  *         });
  *         
+ *         ModuleHandler.getModule("cynlib.song.SongHelper").scriptGet("callbacks").events = [
+ *             32 => function(vars:Dynamic):Void { // 2:0:0
+ *                 songVars.exampleSprite2.color = 0xffaabbcc;
+ *             }
+ *         ];
+ *         
  *         ModuleHandler.getModule("cynlib.song.SongHelper").scriptGet("callbacks").stageReset.push(function(vars:Dynamic):Void {
  *             songVars.exampleSprite1.angle = 0;
  *         });
@@ -184,7 +196,8 @@ typedef SongCallbacks = {
  *     }
  * }
  * 
- * // Example module script that checks for ExampleStage, and hides the opponent strums/notes if so.
+ * // Example module script that does some song-related logic.
+ * // Uses single-vocals fix module and makes the opponent strumline invisible in the example stage.
  * package exampleMod;
  * 
  * import funkin.modding.module.ModuleHandler;
@@ -196,7 +209,9 @@ typedef SongCallbacks = {
  *         super("exampleMod.ExampleModule");
  *     }
  *     
- *     private var inExampleStage:Bool = false;
+ *     public var inExampleModSong:Bool = false;
+ *     
+ *     public var inExampleStage:Bool = false;
  *     
  *     override public function onCreate(event:ScriptEvent):Void {
  *         bind();
@@ -216,23 +231,38 @@ typedef SongCallbacks = {
  *     
  *     private function bind():Void {
  *         ModuleHandler.getModule("cynlib.song.SongHelper").scriptGet("callbacks").createPersist.push(function(vars:Dynamic):Void {
- *             inExampleStage = songVars.inExampleStage == true;
- *             if (inExampleStage != true) {
- *                 return;
+ *             songVars = vars;
+ *             
+ *             if (inExampleModSong) {
+ *                 // Optionally use the single-vocals fix module.
+ *                 ModuleHandler.deactivateModule("cynlib.song.SingleVocalsFix");
  *             }
  *             
- *             PlayState.instance.opponentStrumline.visible = false;
+ *             if (inExampleStage) {
+ *                PlayState.instance.opponentStrumline.visible = false;
+ *             }
  *         });
  *     }
  *     
  *     public override function onNoteIncoming(event:NoteScriptEvent):Void {
- *         if (!inExampleStage) {
- *             return;
+ *         if (inExampleStage) {
+ *             if (event.note.noteData < 4) {
+ *                 event.note.visible = false;
+ *             }
+ *         }
+ *     }
+ *     
+ *     override public function onSongEnd(event:ScriptEvent):Void {
+ *         if (inExampleModSong) {
+ *             // Optionally use the single-vocals fix module.
+ *             ModuleHandler.deactivateModule("cynlib.song.SingleVocalsFix");
  *         }
  *         
- *         if (event.note.noteData < 4) {
- *             event.note.visible = false;
- *         }
+ *         inExampleModSong = false;
+ *         
+ *         inExampleStage = false;
+ *         
+ *         songVars = null;
  *     }
  * }
  * ```
