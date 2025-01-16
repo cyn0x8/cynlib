@@ -118,9 +118,14 @@ typedef SaveEntry = {
  *     }
  *     
  *     // You can set up an auto-save system like this:
+ *     public var autoSaveEnabled:Bool = true;
+ *     public var autoSaveInterval:Float = 60;
  *     private var autoSaveTick:Float = 0;
- *     private var autoSaveInterval:Float = 60;
  *     override public function onUpdate(event:UpdateScriptEvent):Void {
+ *         if (!autoSaveEnabled) {
+ *             return;
+ *         }
+ *         
  *         autoSaveTick += event.elapsed;
  *         if (autoSaveTick >= autoSaveInterval) {
  *             autoSaveTick %= autoSaveInterval;
@@ -282,7 +287,7 @@ class Save extends ScriptedModule {
 		}
 		
 		for (entry in entries.keys()) {
-			if (entries.get(entry).saveOnReload) {
+			if (entries.get(entry).saveOnReload == true) {
 				save(entry);
 			}
 		}
