@@ -146,9 +146,10 @@ class Save extends ScriptedModule {
 	 * 
 	 * @param data The save entry data.
 	 * @param cleanSave If `true`, keys in the loaded data that don't exist in the template will be removed.
+	 * @param saveImmediately Optionally write the data to file immediately after registering.
 	 * @return Your mod's save data structure, or `null` if the ID is invalid.
 	 */
-	public function register(data:SaveEntryData, cleanSave:Bool = false):Dynamic {
+	public function register(data:SaveEntryData, cleanSave:Bool = false, saveImmediately:Bool = false):Dynamic {
 		if (checkID(data) == null) {
 			return;
 		}
@@ -181,6 +182,10 @@ class Save extends ScriptedModule {
 		}
 		
 		entries.set(data.id, data);
+		
+		if (saveImmediately) {
+			save(data.id, false);
+		}
 		
 		return data.saveData;
 	}
