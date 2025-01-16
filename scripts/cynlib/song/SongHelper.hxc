@@ -219,7 +219,7 @@ typedef SongCallbacks = {
  *     }
  *     
  *     private function hook():Void {
- *         ModuleHandler.getModule("cynlib.reloader.Reloader").scriptGet("reloadPre").set("exampleMod.exampleModule", {
+ *         ModuleHandler.getModule("cynlib.reloader.Reloader").scriptGet("reloadPre").set("exampleMod.ExampleModule", {
  *             callback: "onReload"
  *         });
  *     }
