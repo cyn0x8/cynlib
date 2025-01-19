@@ -32,6 +32,7 @@ class SymmetricStrums extends ScriptedModule {
 	
 	private function hook():Void {
 		ModuleHandler.getModule("cynlib.reloader.Reloader").scriptGet("reloadPre").set("cynlib.song.SymmetricStrums", {
+			priority: -2147483647,
 			callback: "onReload"
 		});
 	}

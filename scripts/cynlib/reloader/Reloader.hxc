@@ -1,5 +1,10 @@
 package cynlib.reloader;
 
+import Float;
+import Int;
+import String;
+
+import haxe.ds.ArraySort;
 import haxe.ds.StringMap;
 
 import thx.Types;
@@ -123,24 +128,24 @@ class Reloader extends ScriptedModule {
 		
 		var sorted:Array<String> = new Array();
 		for (module in reloadData.keys()) {
-			if (Types.isAnonymousObject(reloadData.get(module))) {
+			if (Types.isAnonymousObject(reloadData.get(module)) && ModuleHandler.getModule(module) != null) { 
 				sorted.push(module);
 			}
 		}
 		
-		sorted.sort(function(a:String, b:String):Int {
-			var aData:ReloadData = reloadData.get(a);
-			var bData:ReloadData = reloadData.get(b);
+		ArraySort.sort(sorted, function(a:String, b:String):Int {
+			var priorityA:Null<Int> = parsePriority(reloadData.get(a).priority);
+			var priorityB:Null<Int> = parsePriority(reloadData.get(b).priority);
 			
-			if (aData.priority == null && bData.priority == null) {
+			if (priorityA == null && priorityB == null) {
 				return 0;
-			} else if (aData.priority == null) {
+			} else if (priorityA == null) {
 				return 1;
-			} else if (bData.priority == null) {
+			} else if (priorityB == null) {
 				return -1;
 			}
 			
-			return aData.priority > bData.priority ? 1 : -1;
+			return priorityA - priorityB;
 		});
 		
 		for (i in 0...sorted.length) {
@@ -176,21 +181,30 @@ class Reloader extends ScriptedModule {
 		}
 		
 		FlxG.signals.preStateSwitch.addOnce(function():Void {
+			trace("cynlib: Starting pre-switch reload.");
 			reload(reloadPre);
-			
 			trace("cynlib: Pre-switch reload complete.");
 		});
 		
 		FlxG.signals.postStateSwitch.addOnce(function():Void {
+			trace("cynlib: Starting post-switch reload.");
 			reload(reloadPost);
-			
 			trace("cynlib: Post-switch reload complete.");
 			
 			if (targetState != null) {
 				trace("cynlib: Switching to target state \"" + targetState + "\"...");
-				
 				FlxG.switchState(ScriptedMusicBeatState.init(targetState));
 			}
 		});
+	}
+	
+	private function parsePriority(value:Dynamic):Null<Int> {
+		if (Std.isOfType(value, Int) || Std.isOfType(value, Float)) {
+			return Std.int(value);
+		} else if (Std.isOfType(value, String)) {
+			return Std.parseInt(value);
+		}
+		
+		return null;
 	}
 }
