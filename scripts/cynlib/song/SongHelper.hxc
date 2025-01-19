@@ -72,7 +72,7 @@ typedef SongCallbacks = {
  * ```haxe
  * // Example stage script.
  * // Creates a sprite and adds it to the stage, as well as some example events and hiding the opponent's strumline.
- * package exampleMod.stages;
+ * package exampleMod.song.stages;
  * 
  * import flixel.tweens.FlxEase;
  * import flixel.tweens.FlxTween;
@@ -85,7 +85,7 @@ typedef SongCallbacks = {
  * 
  * class ExampleStage extends ScriptedStage {
  *     public function new() {
- *         super("exampleMod.exampleStage");
+ *         super("exampleMod.ExampleStage");
  *     }
  *     
  *     private var songVars:Dynamic = null;
@@ -153,7 +153,7 @@ typedef SongCallbacks = {
  * 
  * // Example song script.
  * // Creates a second sprite and uses the first sprite from the stage script.
- * package exampleMod.songs;
+ * package exampleMod.song.songs;
  * 
  * import funkin.graphics.FunkinSprite;
  * import funkin.modding.module.ModuleHandler;
@@ -161,7 +161,7 @@ typedef SongCallbacks = {
  * 
  * class ExampleSong extends ScriptedSong {
  *     public function new() {
- *         super("exampleMod.exampleSong");
+ *         super("exampleMod.ExampleSong");
  *     }
  *     
  *     private var songVars:Dynamic = null;
@@ -202,24 +202,24 @@ typedef SongCallbacks = {
  * 
  * // Example module script that does some song-related logic.
  * // Uses single-vocals fix and center HUD modules.
- * package exampleMod;
+ * package exampleMod.song;
  * 
  * import funkin.modding.module.ModuleHandler;
  * import funkin.modding.module.ScriptedModule;
  * 
  * class ExampleSongHandler extends ScriptedModule {
  *     public function new() {
- *         super("exampleMod.ExampleSongHandler");
+ *         super("exampleMod.song.ExampleSongHandler");
  *     }
  *     
  *     private var inExampleModSong:Bool = false;
- *     public var exampleModSongs:Array<String> = [
- *         "exampleMod.exampleSong"
+ *     public var songIDs:Array<String> = [
+ *         "exampleMod.ExampleSong"
  *     ];
  *     
  *     private var inExampleModStage:Bool = false;
- *     public var exampleModStages:Array<String> = [
- *         "exampleMod.exampleStage"
+ *     public var stageIDs:Array<String> = [
+ *         "exampleMod.ExampleStage"
  *     ];
  *     
  *     override public function onCreate(event:ScriptEvent):Void {
@@ -228,7 +228,7 @@ typedef SongCallbacks = {
  *     }
  *     
  *     private function hook():Void {
- *         ModuleHandler.getModule("cynlib.reloader.Reloader").scriptGet("reloadPre").set("exampleMod.ExampleSongHandler", {
+ *         ModuleHandler.getModule("cynlib.reloader.Reloader").scriptGet("reloadPre").set("exampleMod.song.ExampleSongHandler", {
  *             callback: "onReload"
  *         });
  *     }
@@ -240,8 +240,8 @@ typedef SongCallbacks = {
  *     
  *     private function bind():Void {
  *         ModuleHandler.getModule("cynlib.song.SongHelper").scriptGet("callbacks").createPersist.push(function(vars:Dynamic):Void {
- *             inExampleModSong = exampleModSongs.contains(vars.song.id);
- *             inExampleModStage = exampleModStages.contains(vars.stage.id);
+ *             inExampleModSong = songIDs.contains(vars.song.id);
+ *             inExampleModStage = stageIDs.contains(vars.stage.id);
  *             
  *             if (inExampleModSong) {
  *                 ModuleHandler.activateModule("cynlib.song.SingleVocalsFix");
