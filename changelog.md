@@ -27,6 +27,8 @@
   - Helper module for overriding note singing animations.
 - Added `cynlib.song.SingleVocalsFix`.
   - Fixes muting issues with single-vocal songs.
+- Added `cynlib.song.SymmetricStrums`
+  - A simple helper class that makes the strumlines symmetric like in other engines.
 - Changes to `cynlib.menu.Menu`:
   - Added support for mouse-based items, separate from keyboard-based ones. See internal documentation for more info.
 - Changes to `cynlib.menu.MenuItem`:

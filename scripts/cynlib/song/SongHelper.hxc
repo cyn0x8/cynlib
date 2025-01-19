@@ -1,5 +1,6 @@
 package cynlib.song;
 
+import funkin.modding.module.ModuleHandler;
 import funkin.modding.module.ScriptedModule;
 import funkin.play.PlayState;
 import funkin.play.song.Song;
@@ -200,7 +201,7 @@ typedef SongCallbacks = {
  * }
  * 
  * // Example module script that does some song-related logic.
- * // Uses single-vocals fix module.
+ * // Uses single-vocals fix and center HUD modules.
  * package exampleMod;
  * 
  * import funkin.modding.module.ModuleHandler;
@@ -239,28 +240,30 @@ typedef SongCallbacks = {
  *     
  *     private function bind():Void {
  *         ModuleHandler.getModule("cynlib.song.SongHelper").scriptGet("callbacks").createPersist.push(function(vars:Dynamic):Void {
- *             songVars = vars;
- *             
- *             inExampleModSong = exampleModSongs.contains(songVars.song.id);
- *             inExampleModStage = exampleModStages.contains(songVars.stage.id);
+ *             inExampleModSong = exampleModSongs.contains(vars.song.id);
+ *             inExampleModStage = exampleModStages.contains(vars.stage.id);
  *             
  *             if (inExampleModSong) {
- *                 // Optionally use the single-vocals fix module.
- *                 ModuleHandler.deactivateModule("cynlib.song.SingleVocalsFix");
+ *                 ModuleHandler.activateModule("cynlib.song.SingleVocalsFix");
+ *             }
+ *             
+ *             if (inExampleModStage) {
+ *                 ModuleHandler.activateModule("cynlib.song.SymmetricStrums");
  *             }
  *         });
  *     }
  *     
  *     override public function onSongEnd(event:ScriptEvent):Void {
  *         if (inExampleModSong) {
- *             // Optionally use the single-vocals fix module.
  *             ModuleHandler.deactivateModule("cynlib.song.SingleVocalsFix");
+ *         }
+ *         
+ *         if (inExampleModStage) {
+ *             ModuleHandler.deactivateModule("cynlib.song.SymmetricStrums");
  *         }
  *         
  *         inExampleModSong = false;
  *         inExampleModStage = false;
- *         
- *         songVars = null;
  *     }
  * }
  * ```
@@ -303,6 +306,20 @@ class SongHelper extends ScriptedModule {
 	
 	override public function onCreate(event:ScriptEvent):Void {
 		reset();
+		
+		hook();
+	}
+	
+	private function hook():Void {
+		ModuleHandler.getModule("cynlib.reloader.Reloader").scriptGet("reloadPre").set("cynlib.song.SongHelper", {
+			callback: "onReload"
+		});
+	}
+	
+	public function onReload():Void {
+		reset();
+		
+		hook();
 	}
 	
 	override public function onStateChangeEnd(event:StateChangeScriptEvent):Void {
