@@ -49,6 +49,7 @@
   - Now calls callbacks when playtesting during charting (not minimal mode).
 - Changes to `cynlib.util.GenUtil`:
   - Added `randomCallback`.
+  - Added `intColorToVec4`.
   - Added `sanitizePath`.
 - Changed to `cynlib.util.MathUtil`:
   - Added `mod`.
