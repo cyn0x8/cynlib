@@ -328,6 +328,10 @@ class SongHelper extends ScriptedModule {
 			songVars.song = PlayState.instance.currentSong;
 			songVars.stage = PlayState.instance.currentStage;
 			
+			songVars.camGame = PlayState.instance.camGame;
+			songVars.camHUD = PlayState.instance.camHUD;
+			songVars.camCutscene = PlayState.instance.camCutscene;
+			
 			for (callback in callbacks.createPersist) {
 				callback(songVars);
 			}
@@ -348,6 +352,10 @@ class SongHelper extends ScriptedModule {
 		if (Std.isOfType(event.targetState, PlayState) && !PlayState.instance.isMinimalMode) {
 			songVars.song = PlayState.instance.currentSong;
 			songVars.stage = PlayState.instance.currentStage;
+			
+			songVars.camGame = PlayState.instance.camGame;
+			songVars.camHUD = PlayState.instance.camHUD;
+			songVars.camCutscene = PlayState.instance.camCutscene;
 			
 			for (callback in callbacks.createPersist) {
 				callback(songVars);

@@ -43,7 +43,8 @@
   - No longer uses `FlxTimer`s (having hscript issues).
 - Changes to `cynlib.song.SongHelper`:
   - Changed `PlayState` creation callback names.
-  - Added step-based callback integer map for song events
+  - Added `PlayState` cameras to `songVars`.
+  - Added step-based callback integer map for song events.
   - Added `stageReset` callback array.
   - Now calls callbacks when playtesting during charting (not minimal mode).
 - Changes to `cynlib.util.GenUtil`:
