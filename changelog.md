@@ -49,6 +49,8 @@
 - Changes to `cynlib.util.GenUtil`:
   - Added `randomCallback`.
   - Added `sanitizePath`.
+- Changed to `cynlib.util.MathUtil`:
+  - Added `mod`.
 
 ## v3.0.0
 

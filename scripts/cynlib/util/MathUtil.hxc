@@ -44,7 +44,7 @@ class MathUtil extends ScriptedModule {
 	 *
 	 * @return The interpolated value.
 	 */
-	public static function smoothLerpDecay(base:Float, target:Float, deltaTime:Float, halfLife:Float):Float {
+	public function smoothLerpDecay(base:Float, target:Float, deltaTime:Float, halfLife:Float):Float {
 		if (deltaTime == 0) {
 			return base;
 		}
@@ -74,7 +74,7 @@ class MathUtil extends ScriptedModule {
 	 *
 	 * @return The interpolated value.
 	 */
-	public static function smoothLerpPrecision(base:Float, target:Float, deltaTime:Float, duration:Float, precision:Float = 1 / 100):Float {
+	public function smoothLerpPrecision(base:Float, target:Float, deltaTime:Float, duration:Float, precision:Float = 1 / 100):Float {
 		if (deltaTime == 0) {
 			return base;
 		}
@@ -84,5 +84,16 @@ class MathUtil extends ScriptedModule {
 		}
 		
 		return MathUtil.lerp(target, base, Math.pow(precision, deltaTime / duration));
+	}
+	
+	/**
+	 * A more mathematically correct version of the modulus operator.
+	 * 
+	 * @param a The dividend.
+	 * @param b The divisor.
+	 * @return The modulus of `a` and `b`.
+	 */
+	public function mod(a:Float, b:Float):Float {
+		return a - Math.floor(a / b) * b;
 	}
 }
