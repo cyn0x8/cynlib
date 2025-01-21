@@ -43,8 +43,12 @@ class SymmetricStrums extends ScriptedModule {
 	}
 	
 	private function bind():Void {
-		ModuleHandler.getModule("cynlib.song.SongHelper").scriptGet("callbacks").createPersist.push(function(vars:Dynamic):Void {
-			if (active) {
+		ModuleHandler.getModule("cynlib.song.SongHelper").scriptGet("callbacks").createPersist.push({
+			callback: function(vars:Dynamic):Void {
+				if (!active) {
+					return;
+				}
+				
 				PlayState.instance.opponentStrumline.x = edgePadding;
 				PlayState.instance.playerStrumline.x = FlxG.width - PlayState.instance.playerStrumline.width - edgePadding;
 			}
