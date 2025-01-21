@@ -385,10 +385,7 @@ class SongHelper extends ScriptedModule {
 	 * Call this function in your stage script to trigger the `stageReset` callbacks.
 	 */
 	public function onStageReset():Void {
-		ArraySort.sort(callbacks.stageReset, sortByPriority);
-		for (callback in callbacks.stageReset) {
-			callback(songVars);
-		}
+		doCallbackList(callbacks.stageReset);
 	}
 	
 	override public function onCreate(event:ScriptEvent):Void {
@@ -442,15 +439,8 @@ class SongHelper extends ScriptedModule {
 	}
 	
 	override public function onSongEnd(event:ScriptEvent):Void {
-		ArraySort.sort(callbacks.songEndPersist, sortByPriority);
-		for (callback in callbacks.songEndPersist) {
-			callback(songVars);
-		}
-		
-		ArraySort.sort(callbacks.songEnd, sortByPriority);
-		for (callback in callbacks.songEnd) {
-			callback(songVars);
-		}
+		doCallbackList(callbacks.songEndPersist);
+		doCallbackList(callbacks.songEnd);
 	}
 	
 	private function onPlayStateCreate():Void {
@@ -467,20 +457,9 @@ class SongHelper extends ScriptedModule {
 		songVars.camHUD = songVars.instance.camHUD;
 		songVars.camCutscene = songVars.instance.camCutscene;
 		
-		ArraySort.sort(callbacks.createPersist, sortByPriority);
-		for (callback in callbacks.createPersist) {
-			callback(songVars);
-		}
-		
-		ArraySort.sort(callbacks.createPre, sortByPriority);
-		for (callback in callbacks.createPre) {
-			callback(songVars);
-		}
-		
-		ArraySort.sort(callbacks.createPost, sortByPriority);
-		for (callback in callbacks.createPost) {
-			callback(songVars);
-		}
+		doCallbackList(callbacks.createPersist);
+		doCallbackList(callbacks.createPre);
+		doCallbackList(callbacks.createPost);
 	}
 	
 	private function reset():Void {
@@ -514,19 +493,27 @@ class SongHelper extends ScriptedModule {
 		completedEvents.resize(0);
 	}
 	
-	private function sortByPriority(a:CallbackData, b:CallbackData):Int {
-		a.priority = parsePriority(a.priority);
-		b.priority = parsePriority(b.priority);
+	private function doCallbackList(list:Array<CallbackData>):Void {
+		ArraySort.sort(list, function(a:CallbackData, b:CallbackData):Int {
+			a.priority = parsePriority(a.priority);
+			b.priority = parsePriority(b.priority);
+			
+			if (a.priority == null && b.priority == null) {
+				return 0;
+			} else if (a.priority == null) {
+				return 1;
+			} else if (b.priority == null) {
+				return -1;
+			}
+			
+			return a.priority - b.priority;
+		});
 		
-		if (a.priority == null && b.priority == null) {
-			return 0;
-		} else if (a.priority == null) {
-			return 1;
-		} else if (b.priority == null) {
-			return -1;
+		for (callback in list) {
+			if (callback.callback != null) {
+				callback.callback(songVars);
+			}
 		}
-		
-		return a.priority - b.priority;
 	}
 	
 	private function parsePriority(value:Dynamic):Null<Int> {
