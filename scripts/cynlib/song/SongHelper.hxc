@@ -1,5 +1,14 @@
 package cynlib.song;
 
+import Float;
+import Int;
+import String;
+
+import haxe.ds.ArraySort;
+import haxe.ds.IntMap;
+
+import thx.Types;
+
 import funkin.modding.module.ModuleHandler;
 import funkin.modding.module.ScriptedModule;
 import funkin.play.PlayState;
@@ -11,7 +20,7 @@ import funkin.play.stage.Stage;
  */
 typedef SongVars = {
 	/**
-	 * Variables that persist between songs.
+	 * Anonymous structure that persists between songs.
 	 */
 	persist:Dynamic,
 	
@@ -29,40 +38,66 @@ typedef SongVars = {
 }
 
 /**
+ * Data for callbacks arrays in `callbacks`.
+ */
+typedef SongCallbackData = {
+	/**
+	 * The priority of the callback, where lower numbers are called first.
+	 * If null, the order is random but after all non-null priorities.
+	 */
+	priority:Null<Int>,
+	
+	/**
+	 * The function to call with `songVars` passed to it.
+	 */
+	callback:(SongVars)->Void
+}
+
+/**
  * Various callbacks to help set up your song-related scripts.
  */
 typedef SongCallbacks = {
 	/**
 	 * Array of callbacks to be called immediately after `PlayState.create`.
+	 * Useful for general song logic like checking for specific songs or stages.
 	 * Does not clear between songs.
 	 * 
 	 * Mainly meant for modules, and runs before `playStateCreatePre` and `playStateCreatePost`.
 	 */
-	createPersist:Array<(SongVars)->Void>,
+	createPersist:Array<SongCallback>,
 	
 	/**
 	 * Array of callbacks to be called after `createPersist`.
 	 * Useful for setting up your stage-specific and song-specific variables and adding them to `songVars`.
 	 */
-	createPre:Array<(SongVars)->Void>,
+	createPre:Array<SongCallback>,
 	
 	/**
 	 * Array of callbacks to be called after `createPre`.
 	 * Useful for logic that would require cross-script interaction via `songVars`, like sprite z-ordering.
 	 */
-	createPost:Array<(SongVars)->Void>,
-	
-	/**
-	 * Map of custom callbacks to be called at specific steps in the song.
-	 * Make sure to set this before the song starts.
-	 */
-	events:IntMap<(SongVars)->Void>,
+	createPost:Array<SongCallback>,
 	
 	/**
 	 * Array of callbacks to be called when the stage is reset.
 	 * Your stage script must call `SongHelper.onStageReset` to trigger these.
 	 */
-	stageReset:Array<(SongVars)->Void>
+	stageReset:Array<SongCallback>,
+	
+	/**
+	 * Array of callbacks to be called when the song ends.
+	 * Useful for resetting your stage-specific and song-specific variables.
+	 * Does not clear between songs.
+	 * 
+	 * Mainly meant for modules, and runs before `songEnd`.
+	 */
+	songEndPersist:Array<SongCallback>,
+	
+	/**
+	 * Array of callbacks to be called after `songEndPersist`.
+	 * Useful for resetting your stage-specific and song-specific variables.
+	 */
+	songEnd:Array<SongCallback>
 }
 
 /**
@@ -71,16 +106,11 @@ typedef SongCallbacks = {
  * Example:
  * ```haxe
  * // Example stage script.
- * // Creates a sprite and adds it to the stage, as well as some example events and hiding the opponent's strumline.
+ * // Creates a sprite and adds it to the stage.
  * package exampleMod.song.stages;
  * 
- * import flixel.tweens.FlxEase;
- * import flixel.tweens.FlxTween;
- * 
- * import funkin.Conductor;
  * import funkin.graphics.FunkinSprite;
  * import funkin.modding.module.ModuleHandler;
- * import funkin.play.PlayState;
  * import funkin.play.stage.ScriptedStage;
  * 
  * class ExampleStage extends ScriptedStage {
@@ -93,49 +123,19 @@ typedef SongCallbacks = {
  *     private var exampleSprite1:FunkinSprite = null;
  *     
  *     override public function onCreate(event:ScriptEvent):Void {
- *         ModuleHandler.getModule("cynlib.song.SongHelper").scriptGet("callbacks").get("createPre").push(function(vars:Dynamic):Void {
- *             songVars = vars;
- *             
- *             exampleSprite1 = new FunkinSprite().makeSolidColor(256, 256, 0xffaabbcc);
- *             songVars.exampleSprite1 = exampleSprite1;
- *             
- *             add(exampleSprite1);
- *             exampleSprite1.zIndex = 100;
- *             
- *             refresh();
- *             
- *             PlayState.instance.opponentStrumline.visible = false;
- *         });
- *         
- *         // Stages can also have their own events!
- *         ModuleHandler.getModule("cynlib.song.SongHelper").scriptGet("callbacks").events = [
- *             62 => function(vars:Dynamic):Void { // 3:3:2
- *                 exampleSprite1.scale.set(0.9, 0.9);
- *             },
- *             
- *             64 => function(vars:Dynamic):Void { // 4:0:0
- *                 exampleSprite1.scale.set(1.1, 1.1);
- *                 FlxTween.tween(exampleSprite1.scale, {x: 1, y: 1}, 0.5, {ease: FlxEase.cubeOut});
+ *         ModuleHandler.getModule("cynlib.song.SongHelper").scriptGet("callbacks").get("createPre").push({
+ *             callback: function(vars:Dynamic):Void {
+ *                 songVars = vars;
  *                 
- *                 ModuleHandler.getModule("cynlib.sequence.SongSequence").scriptCall("new_SongSequence", [[
- *                     {time: 0.5, callback: function():Void {
- *                         songVars.exampleSprite2.visible = false;
- *                     }},
- *                     
- *                     {time: 1, callback: function():Void {
- *                         songVars.exampleSprite2.visible = true;
- *                     }},
- *                     
- *                     {time: 1.5, callback: function():Void {
- *                         songVars.exampleSprite2.visible = false;
- *                     }},
- *                     
- *                     {time: 2, callback: function():Void {
- *                         songVars.exampleSprite2.visible = true;
- *                     }}
- *                 ], Conductor.get_instance().get_beatLengthMs() / 1000]);
+ *                 exampleSprite1 = new FunkinSprite().makeSolidColor(256, 256, 0xffaabbcc);
+ *                 songVars.exampleSprite1 = exampleSprite1;
+ *                 
+ *                 add(exampleSprite1);
+ *                 exampleSprite1.zIndex = 100;
+ *                 
+ *                 refresh();
  *             }
- *         ];
+ *         });
  *     }
  *     
  *     override public function resetStage():Void {
@@ -143,16 +143,10 @@ typedef SongCallbacks = {
  *         
  *         ModuleHandler.getModule("cynlib.song.SongHelper").scriptCall("onStageReset");
  *     }
- *     
- *     public override function onNoteIncoming(event:NoteScriptEvent):Void {
- *         if (event.note.noteData < 4) {
- *             event.note.visible = false;
- *         }
- *     }
  * }
  * 
  * // Example song script.
- * // Creates a second sprite and uses the first sprite from the stage script.
+ * // Creates a second sprite as well as using the first sprite from `exampleMod.ExampleStage`.
  * package exampleMod.song.songs;
  * 
  * import funkin.graphics.FunkinSprite;
@@ -169,28 +163,34 @@ typedef SongCallbacks = {
  *     private var exampleSprite2:FunkinSprite = null;
  *     
  *     override public function onCreate(event:ScriptEvent):Void {
- *         ModuleHandler.getModule("cynlib.song.SongHelper").scriptGet("callbacks").createPre.push(function(vars:Dynamic):Void {
- *             songVars = vars;            
- *             
- *             exampleSprite2 = new FunkinSprite().makeSolidColor(512, 512, 0xffccbbaa);
- *             songVars.exampleSprite2 = exampleSprite2;
+ *         ModuleHandler.getModule("cynlib.song.SongHelper").scriptGet("callbacks").createPre.push({
+ *             callback: function(vars:Dynamic):Void {
+ *                 songVars = vars;            
+ *                 
+ *                 exampleSprite2 = new FunkinSprite().makeSolidColor(512, 512, 0xffccbbaa);
+ *                 songVars.exampleSprite2 = exampleSprite2;
+ *             }
  *         });
  *         
- *         ModuleHandler.getModule("cynlib.song.SongHelper").scriptGet("callbacks").createPost.push(function(vars:Dynamic):Void {
- *             songVars.stage.add(exampleSprite2);
- *             exampleSprite2.zIndex = songVars.exampleSprite1.zIndex + 1;
- *             songVars.stage.refresh();
+ *         ModuleHandler.getModule("cynlib.song.SongHelper").scriptGet("callbacks").createPost.push({
+ *             callback: function(vars:Dynamic):Void {
+ *                 songVars.stage.add(exampleSprite2);
+ *                 exampleSprite2.zIndex = songVars.exampleSprite1.zIndex + 1;
+ *                 songVars.stage.refresh();
+ *             }
  *         });
  *         
- *         ModuleHandler.getModule("cynlib.song.SongHelper").scriptGet("callbacks").events = [
+ *         ModuleHandler.getModule("cynlib.song.SongHelper").scriptGet("callbacks").stageReset.push({
+ *             callback: function(vars:Dynamic):Void {
+ *                 songVars.exampleSprite1.angle = 0;
+ *             }
+ *         });
+ *         
+ *         ModuleHandler.getModule("cynlib.song.SongHelper").scriptSet("events", [
  *             32 => function(vars:Dynamic):Void { // 2:0:0
  *                 songVars.exampleSprite2.color = 0xffaabbcc;
  *             }
- *         ];
- *         
- *         ModuleHandler.getModule("cynlib.song.SongHelper").scriptGet("callbacks").stageReset.push(function(vars:Dynamic):Void {
- *             songVars.exampleSprite1.angle = 0;
- *         });
+ *         ]);
  *     }
  *     
  *     override public function onUpdate(event:UpdateScriptEvent):Void {
@@ -200,8 +200,7 @@ typedef SongCallbacks = {
  *     }
  * }
  * 
- * // Example module script that does some song-related logic.
- * // Uses single-vocals fix and center HUD modules.
+ * // Example module script that does some song-related logic like using `cynlib.song.SingleVocalsFix`.
  * package exampleMod.song;
  * 
  * import funkin.modding.module.ModuleHandler;
@@ -223,6 +222,8 @@ typedef SongCallbacks = {
  *     ];
  *     
  *     override public function onCreate(event:ScriptEvent):Void {
+ *         active = false;
+ *         
  *         bind();
  *         hook();
  *     }
@@ -239,31 +240,92 @@ typedef SongCallbacks = {
  *     }
  *     
  *     private function bind():Void {
- *         ModuleHandler.getModule("cynlib.song.SongHelper").scriptGet("callbacks").createPersist.push(function(vars:Dynamic):Void {
- *             inExampleModSong = songIDs.contains(vars.song.id);
- *             inExampleModStage = stageIDs.contains(vars.stage.id);
- *             
- *             if (inExampleModSong) {
- *                 ModuleHandler.activateModule("cynlib.song.SingleVocalsFix");
+ *         ModuleHandler.getModule("cynlib.song.SongHelper").scriptGet("callbacks").createPersist.push({
+ *             priority: 0, // Runs before `exampleMod.song.ExampleHUD` `createPersist` callback so it can use `inExampleModStage`.
+ *             callback: function(vars:Dynamic):Void {
+ *                 inExampleModSong = songIDs.contains(vars.song.id);
+ *                 inExampleModStage = stageIDs.contains(vars.stage.id);
+ *                 
+ *                 if (inExampleModSong) {
+ *                     ModuleHandler.activateModule("cynlib.song.SingleVocalsFix");
+ *                 }
  *             }
- *             
- *             if (inExampleModStage) {
- *                 ModuleHandler.activateModule("cynlib.song.SymmetricStrums");
+ *         });
+ *         
+ *         ModuleHandler.getModule("cynlib.song.SongHelper").scriptGet("callbacks").songEndPersist.push({
+ *             priority: 1, // Runs after `exampleMod.song.ExampleHUD` `songEndPersist` callback so it can use `inExampleModStage` before it's reset.
+ *             callback: function(vars:Dynamic):Void {
+ *                 if (inExampleModSong) {
+ *                     ModuleHandler.deactivateModule("cynlib.song.SingleVocalsFix");
+ *                 }
+ *                 
+ *                 inExampleModSong = false;
+ *                 inExampleModStage = false;
+ *             }
+ *         });
+ *     }
+ * }
+ * 
+ * // Another example module script that does some HUD-related logic like using `cynlib.song.SymmetricStrums` and hiding the opponent's strumline.
+ * package exampleMod.song;
+ * 
+ * import funkin.modding.module.ModuleHandler;
+ * import funkin.modding.module.ScriptedModule;
+ * import funkin.play.PlayState;
+ * 
+ * class ExampleHUD extends ScriptedModule {
+ *     public function new() {
+ *         super("exampleMod.song.ExampleHUD");
+ *     }
+ *     
+ *     override public function onCreate(event:ScriptEvent):Void {
+ *         active = false;
+ *         
+ *         bind();
+ *         hook();
+ *     }
+ *     
+ *     private function hook():Void {
+ *         ModuleHandler.getModule("cynlib.reloader.Reloader").scriptGet("reloadPre").set("exampleMod.song.ExampleHUD", {
+ *             callback: "onReload"
+ *         });
+ *     }
+ *     
+ *     public function onReload():Void {
+ *         bind();
+ *         hook();
+ *     }
+ *     
+ *     private function bind():Void {
+ *         ModuleHandler.getModule("cynlib.song.SongHelper").scriptGet("callbacks").createPersist.push({
+ *             priority: 1, // Runs after `exampleMod.song.ExampleSongHandler` `createPersist` callback so `inExampleModStage` is set.
+ *             callback: function(vars:Dynamic):Void {
+ *                 if (ModuleHandler.getModule("cynlib.song.ExampleSongHandler").scriptGet("inExampleModStage")) {
+ *                     ModuleHandler.activateModule("cynlib.song.SymmetricStrums");
+ *                     
+ *                     PlayState.instance.opponentStrumline.visible = false;
+ *                 }
+ *             }
+ *         });
+ *         
+ *         ModuleHandler.getModule("cynlib.song.SongHelper").scriptGet("callbacks").songEndPersist.push({
+ *             priority: 0, // Runs before `exampleMod.song.ExampleSongHandler` `songEndPersist` callback so `inExampleModStage` hasn't been reset yet.
+ *             callback: function(vars:Dynamic):Void {
+ *                 if (ModuleHandler.getModule("cynlib.song.ExampleSongHandler").scriptGet("inExampleModStage")) {
+ *                     ModuleHandler.deactivateModule("cynlib.song.SymmetricStrums");
+ *                 }
  *             }
  *         });
  *     }
  *     
- *     override public function onSongEnd(event:ScriptEvent):Void {
- *         if (inExampleModSong) {
- *             ModuleHandler.deactivateModule("cynlib.song.SingleVocalsFix");
+ *     public override function onNoteIncoming(event:NoteScriptEvent):Void {
+ *         if (!ModuleHandler.getModule("cynlib.song.ExampleSongHandler").scriptGet("inExampleModStage")) {
+ *             return;
  *         }
  *         
- *         if (inExampleModStage) {
- *             ModuleHandler.deactivateModule("cynlib.song.SymmetricStrums");
+ *         if (event.note.noteData < 4) {
+ *             event.note.visible = false;
  *         }
- *         
- *         inExampleModSong = false;
- *         inExampleModStage = false;
  *     }
  * }
  * ```
@@ -288,15 +350,23 @@ class SongHelper extends ScriptedModule {
 		createPre: new Array(),
 		createPost: new Array(),
 		
-		events: null,
+		stageReset: new Array(),
 		
-		stageReset: new Array()
+		songEndPersist: new Array(),
+		songEnd: new Array()
 	};
+	
+	/**
+	 * Map of custom callbacks to be called at specific steps in the song.
+	 * Make sure to set this before the song starts.
+	 */
+	public var events:IntMap<(SongVars)->Void> = null;
 	
 	/**
 	 * Call this function in your stage script to trigger the `stageReset` callbacks.
 	 */
 	public function onStageReset():Void {
+		ArraySort.sort(callbacks.stageReset, sortByPriority);
 		for (callback in callbacks.stageReset) {
 			callback(songVars);
 		}
@@ -325,24 +395,7 @@ class SongHelper extends ScriptedModule {
 	
 	override public function onStateChangeEnd(event:StateChangeScriptEvent):Void {
 		if (Std.isOfType(event.targetState, PlayState)) {
-			songVars.song = PlayState.instance.currentSong;
-			songVars.stage = PlayState.instance.currentStage;
-			
-			songVars.camGame = PlayState.instance.camGame;
-			songVars.camHUD = PlayState.instance.camHUD;
-			songVars.camCutscene = PlayState.instance.camCutscene;
-			
-			for (callback in callbacks.createPersist) {
-				callback(songVars);
-			}
-			
-			for (callback in callbacks.createPre) {
-				callback(songVars);
-			}
-			
-			for (callback in callbacks.createPost) {
-				callback(songVars);
-			}
+			onPlayStateCreate();
 		} else {
 			reset();
 		}
@@ -350,35 +403,18 @@ class SongHelper extends ScriptedModule {
 	
 	override public function onSubStateOpenEnd(event:SubStateScriptEvent):Void {
 		if (Std.isOfType(event.targetState, PlayState) && !PlayState.instance.isMinimalMode) {
-			songVars.song = PlayState.instance.currentSong;
-			songVars.stage = PlayState.instance.currentStage;
-			
-			songVars.camGame = PlayState.instance.camGame;
-			songVars.camHUD = PlayState.instance.camHUD;
-			songVars.camCutscene = PlayState.instance.camCutscene;
-			
-			for (callback in callbacks.createPersist) {
-				callback(songVars);
-			}
-			
-			for (callback in callbacks.createPre) {
-				callback(songVars);
-			}
-			
-			for (callback in callbacks.createPost) {
-				callback(songVars);
-			}
+			onPlayStateCreate();
 		}
 	}
 	
 	override public function onStepHit(event:SongTimeScriptEvent):Void {
-		if (PlayState.instance == null || PlayState.instance.isMinimalMode || callbacks.events == null) {
+		if (PlayState.instance == null || PlayState.instance.isMinimalMode || events == null) {
 			return;
 		}
 		
 		var step:Int = event.step;
-		if (callbacks.events.exists(step) && completedEvents.indexOf(step) == -1) {
-			callbacks.events.get(step)(songVars);
+		if (events.exists(step) && !completedEvents.contains(step)) {
+			events.get(step)(songVars);
 			completedEvents.push(step);
 		}
 	}
@@ -387,9 +423,49 @@ class SongHelper extends ScriptedModule {
 		completedEvents.resize(0);
 	}
 	
+	override public function onSongEnd(event:ScriptEvent):Void {
+		ArraySort.sort(callbacks.songEndPersist, sortByPriority);
+		for (callback in callbacks.songEndPersist) {
+			callback(songVars);
+		}
+		
+		ArraySort.sort(callbacks.songEnd, sortByPriority);
+		for (callback in callbacks.songEnd) {
+			callback(songVars);
+		}
+	}
+	
+	private function onPlayStateCreate():Void {
+		if (PlayState.instance == null) {
+			return;
+		}
+		
+		songVars.song = PlayState.instance.currentSong;
+		songVars.stage = PlayState.instance.currentStage;
+		
+		songVars.camGame = PlayState.instance.camGame;
+		songVars.camHUD = PlayState.instance.camHUD;
+		songVars.camCutscene = PlayState.instance.camCutscene;
+		
+		ArraySort.sort(callbacks.createPersist, sortByPriority);
+		for (callback in callbacks.createPersist) {
+			callback(songVars);
+		}
+		
+		ArraySort.sort(callbacks.createPre, sortByPriority);
+		for (callback in callbacks.createPre) {
+			callback(songVars);
+		}
+		
+		ArraySort.sort(callbacks.createPost, sortByPriority);
+		for (callback in callbacks.createPost) {
+			callback(songVars);
+		}
+	}
+	
 	private function reset():Void {
 		var persist:Dynamic = {};
-		if (songVars != null) {
+		if (songVars != null && Types.isAnonymousObject(songVars.persist)) {
 			persist = songVars.persist;
 		}
 		
@@ -397,16 +473,47 @@ class SongHelper extends ScriptedModule {
 			persist: persist,
 			
 			stage: null,
-			song: null
+			song: null,
+			
+			camGame: null,
+			camHUD: null,
+			camCutscene: null
 		};
 		
 		callbacks.createPre.resize(0);
 		callbacks.createPost.resize(0);
 		
-		callbacks.events = null;
-		
 		callbacks.stageReset.resize(0);
 		
+		callbacks.songEnd.resize(0);
+		
+		events = null;
+		
 		completedEvents.resize(0);
+	}
+	
+	private function sortByPriority(a:CallbackData, b:CallbackData):Int {
+		a.priority = parsePriority(a.priority);
+		b.priority = parsePriority(b.priority);
+		
+		if (a.priority == null && b.priority == null) {
+			return 0;
+		} else if (a.priority == null) {
+			return 1;
+		} else if (b.priority == null) {
+			return -1;
+		}
+		
+		return a.priority - b.priority;
+	}
+	
+	private function parsePriority(value:Dynamic):Null<Int> {
+		if (Std.isOfType(value, Int) || Std.isOfType(value, Float)) {
+			return Std.int(value);
+		} else if (Std.isOfType(value, String)) {
+			return Std.parseInt(value);
+		}
+		
+		return null;
 	}
 }

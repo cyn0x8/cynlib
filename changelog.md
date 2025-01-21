@@ -3,7 +3,7 @@
 ## v4.0.0
 
 - Retroactively improved GitHub changelog and readme.
-- Improved and added to documentation.
+- Improved and added much more documentation, with examples.
 - Removed some redundant code and fixed a few stability issues.
 - Replaced internal usages of `FlxTimer` with `Sequence`.
 - Added notekinds:
@@ -42,10 +42,11 @@
 - Changes to `cynlib.sequence.Sequence`;
   - No longer uses `FlxTimer`s (having hscript issues).
 - Changes to `cynlib.song.SongHelper`:
-  - Changed `PlayState` creation callback names.
   - Added `PlayState` cameras to `songVars`.
-  - Added step-based callback integer map for song events.
-  - Added `stageReset` callback array.
+  - Changed `PlayState` creation callback names.
+  - Added `stageReset` callback array to `callbacks`.
+  - Added `songEndPersist` and `songEnd` callback arrays to `callbacks`.
+  - Added `events` callback integer map for step-based song events.
   - Now calls callbacks when playtesting during charting (not minimal mode).
 - Changes to `cynlib.util.GenUtil`:
   - Added `randomCallback`.
