@@ -42,7 +42,7 @@
 - Changes to `cynlib.sequence.Sequence`;
   - No longer uses `FlxTimer`s (having hscript issues).
 - Changes to `cynlib.song.SongHelper`:
-  - Added `PlayState` cameras to `songVars`.
+  - Added `PlayState` instance and cameras to `songVars`.
   - Changed `PlayState` creation callback names.
   - Added `stageReset` callback array to `callbacks`.
   - Added `songEndPersist` and `songEnd` callback arrays to `callbacks`.

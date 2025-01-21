@@ -271,7 +271,6 @@ typedef SongCallbacks = {
  * 
  * import funkin.modding.module.ModuleHandler;
  * import funkin.modding.module.ScriptedModule;
- * import funkin.play.PlayState;
  * 
  * class ExampleHUD extends ScriptedModule {
  *     public function new() {
@@ -303,7 +302,7 @@ typedef SongCallbacks = {
  *                 if (ModuleHandler.getModule("cynlib.song.ExampleSongHandler").scriptGet("inExampleModStage")) {
  *                     ModuleHandler.activateModule("cynlib.song.SymmetricStrums");
  *                     
- *                     PlayState.instance.opponentStrumline.visible = false;
+ *                     vars.instance.opponentStrumline.visible = false;
  *                 }
  *             }
  *         });
@@ -440,12 +439,14 @@ class SongHelper extends ScriptedModule {
 			return;
 		}
 		
-		songVars.song = PlayState.instance.currentSong;
-		songVars.stage = PlayState.instance.currentStage;
+		songVars.instance = PlayState.instance;
 		
-		songVars.camGame = PlayState.instance.camGame;
-		songVars.camHUD = PlayState.instance.camHUD;
-		songVars.camCutscene = PlayState.instance.camCutscene;
+		songVars.song = songVars.instance.currentSong;
+		songVars.stage = songVars.instance.currentStage;
+		
+		songVars.camGame = songVars.instance.camGame;
+		songVars.camHUD = songVars.instance.camHUD;
+		songVars.camCutscene = songVars.instance.camCutscene;
 		
 		ArraySort.sort(callbacks.createPersist, sortByPriority);
 		for (callback in callbacks.createPersist) {
@@ -471,6 +472,8 @@ class SongHelper extends ScriptedModule {
 		
 		songVars = {
 			persist: persist,
+			
+			instance: null,
 			
 			stage: null,
 			song: null,
