@@ -340,12 +340,10 @@ typedef SongCallbacks = {
  *     }
  *     
  *     public override function onNoteIncoming(event:NoteScriptEvent):Void {
- *         if (!ModuleHandler.getModule("cynlib.song.ExampleSongHandler").scriptGet("inExampleModStage")) {
- *             return;
- *         }
- *         
- *         if (event.note.noteData < 4) {
- *             event.note.visible = false;
+ *         if (ModuleHandler.getModule("cynlib.song.ExampleSongHandler").scriptGet("inExampleModStage")) {
+ *             if (event.note.noteData < 4) {
+ *                 event.note.visible = false;
+ *             }
  *         }
  *     }
  * }
