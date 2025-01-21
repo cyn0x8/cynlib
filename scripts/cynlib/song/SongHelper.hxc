@@ -16,7 +16,6 @@ import funkin.modding.module.ScriptedModule;
 import funkin.play.PlayState;
 import funkin.play.song.Song;
 import funkin.play.stage.Stage;
-import funkin.util.ReflectUtil;
 
 /**
  * Variables to be shared across song-related scripts.
@@ -362,18 +361,7 @@ class SongHelper extends ScriptedModule {
 	 * 
 	 * This structure is passed to all `callbacks` and `events` callbacks.
 	 */
-	public var songVars:SongVars = {
-		persist: {},
-		
-		instance: null,
-		
-		stage: null,
-		song: null,
-		
-		camGame: null,
-		camHUD: null,
-		camCutscene: null
-	};
+	public var songVars:SongVars = null;
 	
 	/**
 	 * Various callbacks to help set up your song-related scripts.
@@ -497,22 +485,24 @@ class SongHelper extends ScriptedModule {
 		}
 	}
 	
-	private var songVarsFields:Array<String> = ReflectUtil.getAnonymousFields(songVars);
 	private function reset():Void {
 		var persist:Dynamic = {};
 		if (songVars != null && Types.isAnonymousObject(songVars.persist)) {
 			persist = songVars.persist;
 		}
 		
-		for (field in ReflectUtil.getAnonymousFieldsOf(songVars)) {
-			if (songVarsFields.contains(field)) {
-				ReflectUtil.setAnonymousField(songVars, field, null);
-			} else {
-				ReflectUtil.deleteAnonymousField(songVars, field);
-			}
-		}
-		
-		songVars.persist = persist;
+		songVars = {
+			persist: persist,
+			
+			instance: null,
+			
+			stage: null,
+			song: null,
+			
+			camGame: null,
+			camHUD: null,
+			camCutscene: null
+		};
 		
 		callbacks.createPre.resize(0);
 		callbacks.createPost.resize(0);
