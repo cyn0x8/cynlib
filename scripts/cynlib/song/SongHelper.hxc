@@ -9,11 +9,14 @@ import haxe.ds.IntMap;
 
 import thx.Types;
 
+import flixel.FlxCamera;
+
 import funkin.modding.module.ModuleHandler;
 import funkin.modding.module.ScriptedModule;
 import funkin.play.PlayState;
 import funkin.play.song.Song;
 import funkin.play.stage.Stage;
+import funkin.util.ReflectUtil;
 
 /**
  * Variables to be shared across song-related scripts.
@@ -25,16 +28,36 @@ typedef SongVars = {
 	persist:Dynamic,
 	
 	/**
-	 * The current stage.
+	 * The current PlayState instance.
+	 */
+	instance:Null<PlayState>,
+	
+	/**
+	 * The current stage (`instance.currentStage`).
 	 */
 	stage:Null<Stage>,
 	
 	/**
-	 * The current song.
+	 * The current song (`instance.currentSong`).
 	 */
-	song:Null<Song>
+	song:Null<Song>,
 	
-	// Add your own variables to `songVars` during the callbacks.
+	/**
+	 * The current game camera (`instance.camGame`).
+	 */
+	camGame:Null<FlxCamera>,
+	
+	/**
+	 * The current HUD camera (`instance.camHUD`).
+	 */
+	camHUD:Null<FlxCamera>,
+	
+	/**
+	 * The current cutscene camera (`instance.camCutscene`).
+	 */
+	camCutscene:Null<FlxCamera>
+	
+	// Add your own temporary variables to `songVars` during the callbacks.
 }
 
 /**
@@ -337,9 +360,20 @@ class SongHelper extends ScriptedModule {
 	/**
 	 * Variables to be shared across song-related scripts.
 	 * 
-	 * Are also passed to the callbacks.
+	 * This structure is passed to all `callbacks` and `events` callbacks.
 	 */
-	public var songVars:SongVars = null;
+	public var songVars:SongVars = {
+		persist: {},
+		
+		instance: null,
+		
+		stage: null,
+		song: null,
+		
+		camGame: null,
+		camHUD: null,
+		camCutscene: null
+	};
 	
 	/**
 	 * Various callbacks to help set up your song-related scripts.
@@ -370,8 +404,6 @@ class SongHelper extends ScriptedModule {
 			callback(songVars);
 		}
 	}
-	
-	private var completedEvents:Array<Int> = new Array();
 	
 	override public function onCreate(event:ScriptEvent):Void {
 		reset();
@@ -406,6 +438,7 @@ class SongHelper extends ScriptedModule {
 		}
 	}
 	
+	private var completedEvents:Array<Int> = new Array();
 	override public function onStepHit(event:SongTimeScriptEvent):Void {
 		if (PlayState.instance == null || PlayState.instance.isMinimalMode || events == null) {
 			return;
@@ -441,8 +474,8 @@ class SongHelper extends ScriptedModule {
 		
 		songVars.instance = PlayState.instance;
 		
-		songVars.song = songVars.instance.currentSong;
 		songVars.stage = songVars.instance.currentStage;
+		songVars.song = songVars.instance.currentSong;
 		
 		songVars.camGame = songVars.instance.camGame;
 		songVars.camHUD = songVars.instance.camHUD;
@@ -464,24 +497,22 @@ class SongHelper extends ScriptedModule {
 		}
 	}
 	
+	private var songVarsFields:Array<String> = ReflectUtil.getAnonymousFields(songVars);
 	private function reset():Void {
 		var persist:Dynamic = {};
 		if (songVars != null && Types.isAnonymousObject(songVars.persist)) {
 			persist = songVars.persist;
 		}
 		
-		songVars = {
-			persist: persist,
-			
-			instance: null,
-			
-			stage: null,
-			song: null,
-			
-			camGame: null,
-			camHUD: null,
-			camCutscene: null
-		};
+		for (field in ReflectUtil.getAnonymousFieldsOf(songVars)) {
+			if (songVarsFields.contains(field)) {
+				ReflectUtil.setAnonymousField(songVars, field, null);
+			} else {
+				ReflectUtil.deleteAnonymousField(songVars, field);
+			}
+		}
+		
+		songVars.persist = persist;
 		
 		callbacks.createPre.resize(0);
 		callbacks.createPost.resize(0);
