@@ -9,6 +9,7 @@ import haxe.ds.IntMap;
 
 import thx.Types;
 
+import flixel.FlxG;
 import flixel.FlxCamera;
 
 import funkin.modding.module.ModuleHandler;
@@ -107,19 +108,19 @@ typedef SongCallbacks = {
 	stageReset:Array<SongCallback>,
 	
 	/**
-	 * Array of callbacks to be called when the song ends.
-	 * Useful for resetting your stage-specific and song-specific variables.
+	 * Array of callbacks to be called when `PlayState.instance` is destroyed.
+	 * Useful for cleaning up variables.
 	 * Does not clear between songs.
 	 * 
-	 * Mainly meant for modules, and runs before `songEnd`.
+	 * Mainly meant for modules, and runs before `close`.
 	 */
-	songEndPersist:Array<SongCallback>,
+	closePersist:Array<SongCallback>,
 	
 	/**
-	 * Array of callbacks to be called after `songEndPersist`.
-	 * Useful for resetting your stage-specific and song-specific variables.
+	 * Array of callbacks to be called after `closePersist`.
+	 * Useful for cleaning up variables.
 	 */
-	songEnd:Array<SongCallback>
+	close:Array<SongCallback>
 }
 
 /**
@@ -274,8 +275,8 @@ typedef SongCallbacks = {
  *             }
  *         });
  *         
- *         ModuleHandler.getModule("cynlib.song.SongHelper").scriptGet("callbacks").songEndPersist.push({
- *             priority: 1, // Runs after `exampleMod.song.ExampleHUD` `songEndPersist` callback so it can use `inExampleModStage` before it's reset.
+ *         ModuleHandler.getModule("cynlib.song.SongHelper").scriptGet("callbacks").closePersist.push({
+ *             priority: 1, // Runs after `exampleMod.song.ExampleHUD` `closePersist` callback so it can use `inExampleModStage` before it's reset.
  *             callback: function(vars:Dynamic):Void {
  *                 if (inExampleModSong) {
  *                     ModuleHandler.deactivateModule("cynlib.song.SingleVocalsFix");
@@ -329,8 +330,8 @@ typedef SongCallbacks = {
  *             }
  *         });
  *         
- *         ModuleHandler.getModule("cynlib.song.SongHelper").scriptGet("callbacks").songEndPersist.push({
- *             priority: 0, // Runs before `exampleMod.song.ExampleSongHandler` `songEndPersist` callback so `inExampleModStage` hasn't been reset yet.
+ *         ModuleHandler.getModule("cynlib.song.SongHelper").scriptGet("callbacks").closePersist.push({
+ *             priority: 0, // Runs before `exampleMod.song.ExampleSongHandler` `closePersist` callback so `inExampleModStage` hasn't been reset yet.
  *             callback: function(vars:Dynamic):Void {
  *                 if (ModuleHandler.getModule("cynlib.song.ExampleSongHandler").scriptGet("inExampleModStage")) {
  *                     ModuleHandler.deactivateModule("cynlib.song.SymmetricStrums");
@@ -371,8 +372,8 @@ class SongHelper extends ScriptedModule {
 		
 		stageReset: new Array(),
 		
-		songEndPersist: new Array(),
-		songEnd: new Array()
+		closePersist: new Array(),
+		close: new Array()
 	};
 	
 	/**
@@ -439,8 +440,23 @@ class SongHelper extends ScriptedModule {
 	}
 	
 	override public function onSongEnd(event:ScriptEvent):Void {
-		doCallbackList(callbacks.songEndPersist);
-		doCallbackList(callbacks.songEnd);
+		doCallbackList(callbacks.closePersist);
+		doCallbackList(callbacks.close);
+	}
+	
+	private var pressedReload:Bool = false;
+	override public function onUpdate(event:UpdateScriptEvent):Void {
+		pressedReload = FlxG.keys.justPressed.F5;
+	}
+	
+	override public function onDestroy(event:ScriptEvent):Void {
+		if (
+			(PlayState.instance != null && PlayState.instance.criticalFailure) ||
+			(!FlxG.keys.justPressed.F5 && !pressedReload)
+		) {
+			doCallbackList(callbacks.closePersist);
+			doCallbackList(callbacks.close);
+		}
 	}
 	
 	private function onPlayStateCreate():Void {
@@ -486,7 +502,7 @@ class SongHelper extends ScriptedModule {
 		
 		callbacks.stageReset.resize(0);
 		
-		callbacks.songEnd.resize(0);
+		callbacks.close.resize(0);
 		
 		events = null;
 		
