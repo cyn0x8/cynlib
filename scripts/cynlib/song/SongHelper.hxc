@@ -85,7 +85,7 @@ typedef SongCallbacks = {
 	 * Useful for general song logic like checking for specific songs or stages.
 	 * Does not clear between songs.
 	 * 
-	 * Mainly meant for modules, and runs before `playStateCreatePre` and `playStateCreatePost`.
+	 * Mainly meant for modules, and runs before `create`.
 	 */
 	createPersist:Array<SongCallback>,
 	
@@ -93,13 +93,7 @@ typedef SongCallbacks = {
 	 * Array of callbacks to be called after `createPersist`.
 	 * Useful for setting up your stage-specific and song-specific variables and adding them to `songVars`.
 	 */
-	createPre:Array<SongCallback>,
-	
-	/**
-	 * Array of callbacks to be called after `createPre`.
-	 * Useful for logic that would require cross-script interaction via `songVars`, like sprite z-ordering.
-	 */
-	createPost:Array<SongCallback>,
+	create:Array<SongCallback>,
 	
 	/**
 	 * Array of callbacks to be called when the stage is reset.
@@ -146,7 +140,8 @@ typedef SongCallbacks = {
  *     private var exampleSprite1:FunkinSprite = null;
  *     
  *     override public function onCreate(event:ScriptEvent):Void {
- *         ModuleHandler.getModule("cynlib.song.SongHelper").scriptGet("callbacks").get("createPre").push({
+ *         ModuleHandler.getModule("cynlib.song.SongHelper").scriptGet("callbacks").create.push({
+ *             priority: 0,
  *             callback: function(vars:Dynamic):Void {
  *                 songVars = vars;
  *                 
@@ -186,7 +181,8 @@ typedef SongCallbacks = {
  *     private var exampleSprite2:FunkinSprite = null;
  *     
  *     override public function onCreate(event:ScriptEvent):Void {
- *         ModuleHandler.getModule("cynlib.song.SongHelper").scriptGet("callbacks").createPre.push({
+ *         ModuleHandler.getModule("cynlib.song.SongHelper").scriptGet("callbacks").create.push({
+ *             priority: 0,
  *             callback: function(vars:Dynamic):Void {
  *                 songVars = vars;            
  *                 
@@ -195,7 +191,8 @@ typedef SongCallbacks = {
  *             }
  *         });
  *         
- *         ModuleHandler.getModule("cynlib.song.SongHelper").scriptGet("callbacks").createPost.push({
+ *         ModuleHandler.getModule("cynlib.song.SongHelper").scriptGet("callbacks").create.push({
+ *             priority: 1,
  *             callback: function(vars:Dynamic):Void {
  *                 songVars.stage.add(exampleSprite2);
  *                 exampleSprite2.zIndex = songVars.exampleSprite1.zIndex + 1;
@@ -367,8 +364,7 @@ class SongHelper extends ScriptedModule {
 	 */
 	public var callbacks:SongCallbacks = {
 		createPersist: new Array(),
-		createPre: new Array(),
-		createPost: new Array(),
+		create: new Array(),
 		
 		stageReset: new Array(),
 		
@@ -474,8 +470,7 @@ class SongHelper extends ScriptedModule {
 		songVars.camCutscene = songVars.instance.camCutscene;
 		
 		doCallbackList(callbacks.createPersist);
-		doCallbackList(callbacks.createPre);
-		doCallbackList(callbacks.createPost);
+		doCallbackList(callbacks.create);
 	}
 	
 	private function reset():Void {
@@ -497,8 +492,7 @@ class SongHelper extends ScriptedModule {
 			camCutscene: null
 		};
 		
-		callbacks.createPre.resize(0);
-		callbacks.createPost.resize(0);
+		callbacks.create.resize(0);
 		
 		callbacks.stageReset.resize(0);
 		
