@@ -719,6 +719,7 @@ class Neocam extends ScriptedModule {
 	}
 	
 	private var alive:Array<Neocam> = new Array();
+	private var toDestroy:Array<()->Void> = new Array();
 	
 	override public function onNoteHit(event:HitNoteScriptEvent):Void {
 		for (obj in alive) {
@@ -750,10 +751,27 @@ class Neocam extends ScriptedModule {
 		}
 	}
 	
-	private var toDestroy:Array<()->Void> = new Array();
-	override public function onDestroy(event:ScriptEvent):Void {
+	override public function onCreate(event:ScriptEvent):Void {
+		bind();
+	}
+	
+	private function bind():Void {
+		ModuleHandler.getModule("cynlib.reloader.Reloader").scriptGet("reloadPre").set("cynlib.neocam.Neocam", {
+			priority: -2147483648,
+			callback: "onReload",
+			variables: function():StringMap {
+				return [
+					"toDestroy" => toDestroy
+				];
+			}
+		});
+	}
+	
+	public function onReload():Void {
 		while (toDestroy.length > 0) {
 			toDestroy.pop()();
 		}
+		
+		bind();
 	}
 }

@@ -39,6 +39,7 @@
   - Now uses the 1-measure bump pattern instead of none by default.
   - Added optional relative bump/bump patterns and relative note offset.
   - Removed `debugMode`.
+  - Controllers are now only auto-destroyed during a mod reload instead of also when `PlayState` is destroyed.
 - Changes to `cynlib.sequence.Sequence`;
   - No longer uses `FlxTimer`s (having hscript issues).
 - Changes to `cynlib.song.SongHelper`:
