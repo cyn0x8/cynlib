@@ -56,6 +56,7 @@
   - Added `sanitizePath`.
 - Changed to `cynlib.util.MathUtil`:
   - Added `mod`.
+    - Temporary until [Funkin#3617](https://github.com/FunkinCrew/Funkin/pull/3617) gets merged.
 
 ## v3.0.0
 
