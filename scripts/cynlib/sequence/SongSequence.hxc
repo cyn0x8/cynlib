@@ -92,7 +92,6 @@ class SongSequence extends ScriptedModule {
 		var obj:Dynamic = {
 			events: new Array(),
 			
-			curTime: Math.NEGATIVE_INFINITY,
 			startTime: 0,
 			
 			running: false,
@@ -135,15 +134,7 @@ class SongSequence extends ScriptedModule {
 				return;
 			}
 			
-			var songPosition:Float = Conductor.get_instance().songPosition;
-			if (songPosition < obj.curTime) {
-				obj.destroy();
-				return;
-			}
-			
-			obj.curTime = songPosition;
-			
-			while (obj.events.length > 0 && obj.curTime > obj.events[0].time + obj.startTime) {
+			while (obj.events.length > 0 && obj.events[0].time + obj.startTime <= Conductor.get_instance().songPosition) {
 				obj.events.shift().callback();
 			}
 			
