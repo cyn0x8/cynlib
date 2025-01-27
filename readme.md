@@ -1,3 +1,6 @@
+> [!caution]
+> This repository will be deleted on 2025/2/1. Move to [rizz-residence/beast-engine](https://github.com/rizz-residence/beast-engine) (it's the same thing, just name changes).
+
 # cynlib
 
 library for fnf modding
